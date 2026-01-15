@@ -8,7 +8,7 @@ The translation into both supported languages(EN/DE) and the calculation of the 
 ---
 ## Getting Started
 
-The app can be installed directly from the [Google Play Store](<link>).
+//TODO: add link, as soon as it´s availible!! (The app can be installed directly from the [Google Play Store](<link>))
 
 ---
 
