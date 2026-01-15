@@ -1,0 +1,48 @@
+
+
+DGE-Kategorien (Lebensmittelgruppen)
+
+    Wir betrachten, wie sich deine Tageskalorien auf verschiedene Lebensmittelgruppen verteilen und vergleichen das mit empfohlenen Anteilen (DGE-orientiert).
+    So messen wir: Für jede Kategorie ermitteln wir den Kalorienanteil und vergleichen ihn mit der Empfehlung. Fehlende Anteile (im Vergleich zur Empfehlung) zählen als Abweichung. Daraus entsteht eine DGE-Übereinstimmung (0–100).
+    Hinweis: Überschreitungen einzelner Kategorien werden nicht separat abgezogen; sie wirken sich indirekt aus, weil dadurch andere Kategorien im Verhältnis zu kurz kommen.
+    Weitere Infos: https://www.dge.de/gesunde-ernaehrung/gut-essen-und-trinken/dge-ernaehrungskreis/
+
+Makronährstoffe
+
+    Grundlage: Wir summieren deine Nährstoffmengen aus allen Zutaten/Portionen und vergleichen sie mit deinen Zielwerten.
+    Welche Makros berücksichtigen wir?
+        Protein, Kohlenhydrate, Fett
+        Gesättigte Fettsäuren (Obergrenze)
+        Zucker (Obergrenze)
+        Ballaststoffe (Mindestmenge)
+        Alkohol (Obergrenze – idealerweise 0)
+    Wie kommen die Zielwerte zustande?
+        Du legst dein tägliches Kalorienziel fest.
+        Wir leiten daraus deine Makroziele ab (prozentuale Verteilung → Gramm/Tag). Beispielhaft orientieren wir uns an gängigen Spannbreiten und Leitlinien (z. B. DGE):
+            Protein: ca. 15–25% der Energie
+            Kohlenhydrate: ca. 45–55% der Energie
+            Fett: ca. 25–35% der Energie
+            Zucker: Maximalanteil (z. B. ≤10% der Energie)
+            Gesättigte Fettsäuren: Maximalanteil (z. B. ≤10% der Energie)
+            Ballaststoffe: Mindestmenge (z. B. ≥30 g/Tag)
+            Alkohol: 0 g empfohlen
+        Deine individuellen Voreinstellungen können diese Werte anpassen. Wir rechnen alles automatisch auf deine kcal-Zielgröße herunter.
+    Bewertung (0–100, linear):
+        Zielwerte (z. B. Protein/Kohlenhydrate/Fett): Je näher am Ziel, desto mehr Punkte.
+        Obergrenzen (z. B. Zucker/gesättigte Fettsäuren/Alkohol): Unter der Grenze = 100 Punkte, darüber linear weniger.
+        Mindestmengen (z. B. Ballaststoffe): Ziel erreicht/überschritten = 100 Punkte, darunter linear weniger.
+
+Wie entsteht der Score?
+
+    Pro Tag berechnen wir:
+        Makro-Score (Übereinstimmung deiner Makros mit den Zielen – lineare Abweichung)
+        DGE-Score (Übereinstimmung deiner Lebensmittelgruppen-Verteilung – lineare Abweichung)
+        Tages-Score = Durchschnitt aus Makro-Score und DGE-Score (je 50%).
+    Für deinen Plan:
+        Plan-Score = Durchschnitt der Tages-Scores.
+        Zusätzlich fließt eine globale DGE-Übereinstimmung über den gesamten Zeitraum ein (gleich gewichtet mit dem Tages-Durchschnitt).
+
+Hinweise
+
+    Der Nutrition Score ist ein Orientierungswert für den schnellen Überblick und ersetzt keine medizinische Beratung.
+    Portionsgrößen, Zubereitung und Wasserverlust/Garprozesse können Nährwerte verändern; kleine Abweichungen sind normal.

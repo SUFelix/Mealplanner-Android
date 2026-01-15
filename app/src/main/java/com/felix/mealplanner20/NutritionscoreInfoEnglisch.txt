@@ -1,0 +1,46 @@
+DGE categories (food groups)
+
+- We look at how your daily calories are distributed across different food groups and compare them with recommended shares (DGE-oriented).
+- How we measure: For each category, we determine the calorie share and compare it with the recommendation. Missing shares (compared to the recommendation) count as deviation. This results in a DGE compliance score (0–100).
+- Note: Exceeding individual categories is not penalized separately; it affects the score indirectly because other categories then fall short by comparison.
+- More information: https://www.dge.de/gesunde-ernaehrung/gut-essen-und-trinken/dge-ernaehrungskreis/
+
+Macronutrients
+
+- Basis: We sum up your nutrient amounts from all ingredients/portions and compare them with your target values.
+- Which macros do we consider?
+  - Protein, carbohydrates, fat
+  - Saturated fat (upper limit)
+  - Sugar (upper limit)
+  - Dietary fiber (minimum amount)
+  - Alcohol (upper limit – ideally 0)
+- How are target values determined?
+  - You set your daily calorie target.
+  - We derive your macro targets from that (percentage distribution → grams/day). As guidance we follow common ranges and guidelines (e.g., DGE):
+    - Protein: approx. 15–25% of energy
+    - Carbohydrates: approx. 45–55% of energy
+    - Fat: approx. 25–35% of energy
+    - Sugar: maximum share (e.g., ≤10% of energy)
+    - Saturated fat: maximum share (e.g., ≤10% of energy)
+    - Dietary fiber: minimum amount (e.g., ≥30 g/day)
+    - Alcohol: 0 g recommended
+  - Your individual preferences can adjust these values. We automatically scale everything to your kcal target.
+- Scoring (0–100, linear):
+  - Target values (e.g., protein/carbohydrates/fat): The closer to the target, the more points.
+  - Upper limits (e.g., sugar/saturated fat/alcohol): At or below the limit = 100 points; above the limit = linearly fewer.
+  - Minimum amounts (e.g., fiber): Target reached/exceeded = 100 points; below the target = linearly fewer.
+
+How is the score calculated?
+
+- Per day we calculate:
+  - Macro score (alignment of your macros with the targets – linear deviation)
+  - DGE score (alignment of your food group distribution – linear deviation)
+  - Daily score = average of macro score and DGE score (50% each).
+- For your plan:
+  - Plan score = average of the daily scores.
+  - Additionally, a global DGE compliance across the entire period is included (equally weighted with the daily average).
+
+Notes
+
+- The Nutrition Score is an orientation value for a quick overview and does not replace medical advice.
+- Portion sizes, preparation, and water loss/cooking processes can affect nutrient values; small deviations are normal.
