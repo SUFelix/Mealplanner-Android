@@ -1,5 +1,7 @@
 package com.felix.mealplanner20.Views.Recipes
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -8,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -30,6 +34,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,8 +71,45 @@ fun MyOwnRecipesView(
 )
 {
     val isLoading by myOwnRecipesViewModel.isLoading.collectAsState()
+    val isLoggedinPremium = true //TODO
     val myOwnRecipeList = myOwnRecipesViewModel.getAllRecipes.collectAsState(initial = listOf())
     val context = LocalContext.current
+
+    val isWizardLoading by myOwnRecipesViewModel.isWizardLoading.collectAsState()
+    val wizardResult by myOwnRecipesViewModel.wizardResult.collectAsState()
+    val wizardError by myOwnRecipesViewModel.wizardError.collectAsState()
+
+    val photoPickerAvailable = remember {
+        androidx.activity.result.contract.ActivityResultContracts
+            .PickVisualMedia.isPhotoPickerAvailable(context)
+    }
+
+    val pickWizardImage = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let { myOwnRecipesViewModel.runWizardForImage(context, it) }
+    }
+
+    val openWizardImage = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { myOwnRecipesViewModel.runWizardForImage(context, it) }
+    }
+
+    LaunchedEffect(wizardResult, wizardError) {
+        wizardResult?.let {
+            Toast.makeText(
+                context,
+                "Wizard found ${it.ingredients.size} ingredients",
+                Toast.LENGTH_LONG
+            ).show()
+            myOwnRecipesViewModel.consumeWizardResult()
+        }
+        wizardError?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            myOwnRecipesViewModel.consumeWizardResult()
+        }
+    }
 
     if (isLoading) {
         MyCircularProgressIndicator()
@@ -129,10 +171,41 @@ fun MyOwnRecipesView(
                 }
             }
         )
+        Row(modifier = Modifier.align(Alignment.BottomEnd)){
+
+
+            Box(
+                modifier = Modifier
+                    .padding(0.dp, 0.dp, 16.dp, 16.dp)
+            ) {
+                Column {
+                    FloatingActionButton(
+                        onClick = {
+                            if (photoPickerAvailable) {
+                                pickWizardImage.launch(
+                                    androidx.activity.result.PickVisualMediaRequest(
+                                        androidx.activity.result.contract
+                                            .ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    )
+                                )
+                            } else {
+                                openWizardImage.launch(arrayOf("image/*"))
+                            }
+                        },
+                        shape = CircleShape,
+                        containerColor = Lime600, // Hintergrundfarbe weiß
+                        contentColor = Color.White,
+                    ) {
+                        Icon(Icons.Default.Star, contentDescription = "Create")
+                    }
+                }
+
+            }
+
+
         Box(
             modifier = Modifier
                 .padding(0.dp, 0.dp, 16.dp, 16.dp)
-                .align(Alignment.BottomEnd)
         ) {
             Column {
                 FloatingActionButton(
@@ -151,9 +224,31 @@ fun MyOwnRecipesView(
 
         }
         }
+        }
 
 
 }
+    if (isWizardLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0x99000000))
+                .wrapContentSize(Alignment.Center)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                MyCircularProgressIndicator()
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    style = MaterialTheme.typography.titleMedium,
+                    text = "Analyzing image...",
+                    color = Color.White
+                )
+            }
+        }
+    }
 }
 
 @Composable

@@ -1,5 +1,6 @@
 package com.felix.mealplanner20.Views.ProfileSettingsLogin
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -47,8 +48,11 @@ fun LoginView(
     val context = LocalContext.current
     LaunchedEffect(signInViewModel, context) {
         signInViewModel.authResults.collect { result ->
+
+            Log.d("LoginView", "authResults collected: $result (type=${result::class.simpleName})")
             when(result) {
                 is AuthResult.Authorized -> {
+                    Log.d("LoginView", "AuthResult.Authorized received, calling onAuthSuccess()")
                     onAuthSuccess()
                 }
                 is AuthResult.Unauthorized -> {
@@ -74,6 +78,7 @@ fun LoginView(
                 }
                 else  -> {
                     val errorMessage = "An unknown error occurred"
+                    Log.d("LoginView", "AuthResult.Authorized received, calling onAuthSuccess()")
                     Toast.makeText(
                         context,
                         errorMessage,

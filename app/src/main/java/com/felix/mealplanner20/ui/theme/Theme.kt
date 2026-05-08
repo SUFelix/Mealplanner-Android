@@ -2,6 +2,7 @@ package com.felix.mealplanner20.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -78,6 +79,7 @@ private val LightColorScheme2 = lightColorScheme(
 )
 
 
+@RequiresApi(Build.VERSION_CODES.Q)
 @Composable
 fun MealPlanner20Theme(
     darkTheme: Boolean = false,//isSystemInDarkTheme(),

@@ -27,6 +27,7 @@ import com.felix.mealplanner20.apiService.IngredientAllowedUnitApiService
 import com.felix.mealplanner20.apiService.IngredientApiService
 import com.felix.mealplanner20.apiService.ProfileApiService
 import com.felix.mealplanner20.apiService.RecipeApiService
+import com.felix.mealplanner20.apiService.WizardApiService
 import com.felix.mealplanner20.use_cases.AddIngredientToRecipeUseCase
 import com.felix.mealplanner20.use_cases.AddRecipeUseCase
 import com.felix.mealplanner20.use_cases.AreAllIngredientsVeganUseCase
@@ -87,7 +88,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 
-const val BASE_URL = "https://www.mealplannerpro.net/"
+const val BASE_URL = "http://192.168.0.95:8080"
+//const val BASE_URL = "https://www.mealplannerpro.net/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -163,6 +165,10 @@ object NavGraph {
 
     @Provides @Singleton
     fun provideFeedbackApi(retrofit: Retrofit): FeedbackApiService =
+        retrofit.create()
+
+    @Provides @Singleton
+    fun provideWizardApi(retrofit: Retrofit): WizardApiService =
         retrofit.create()
 
     @Provides

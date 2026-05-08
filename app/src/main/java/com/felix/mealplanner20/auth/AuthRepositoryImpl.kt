@@ -61,12 +61,15 @@ class AuthRepositoryImpl(
 
     override suspend fun signIn(usernameOrEmail: String, password: String): AuthResult<Unit> {
         return try {
+            Log.d("AuthRepository", "signIn() called with usernameOrEmail=$usernameOrEmail")
             val response = api.signIn(
                 request = AuthRequest(
                     username = usernameOrEmail,
                     password = password
                 )
             )
+
+            Log.d("AuthRepository", "signIn() success, token=${response.token}, role=${response.role}")
             prefs.edit()
                 .putString("jwt", response.token)
                 .apply()
@@ -78,6 +81,13 @@ class AuthRepositoryImpl(
                 .apply()
             AuthResult.Authorized()
         } catch(e: HttpException) {
+            val code = e.code()
+            val errorBody = e.response()?.errorBody()?.string()
+            Log.e(
+                "AuthRepository",
+                "signIn() HttpException: code=$code, body=$errorBody",
+                e
+            )
             when (e.code()) {
                 401 -> AuthResult.Unauthorized()
                 409 -> {
