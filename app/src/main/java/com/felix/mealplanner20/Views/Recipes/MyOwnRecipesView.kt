@@ -78,6 +78,7 @@ fun MyOwnRecipesView(
     val isWizardLoading by myOwnRecipesViewModel.isWizardLoading.collectAsState()
     val wizardResult by myOwnRecipesViewModel.wizardResult.collectAsState()
     val wizardError by myOwnRecipesViewModel.wizardError.collectAsState()
+    val navigateToWizardRecipe by myOwnRecipesViewModel.navigateToWizardRecipe.collectAsState()
 
     val photoPickerAvailable = remember {
         androidx.activity.result.contract.ActivityResultContracts
@@ -108,6 +109,13 @@ fun MyOwnRecipesView(
         wizardError?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
             myOwnRecipesViewModel.consumeWizardResult()
+        }
+    }
+
+    LaunchedEffect(navigateToWizardRecipe) {
+        if (navigateToWizardRecipe) {
+            myOwnRecipesViewModel.consumeNavigateToWizardRecipe()
+            navController.navigate(Screen.AddUpdateRecipeScreen(context).passId(0L))
         }
     }
 
@@ -196,7 +204,7 @@ fun MyOwnRecipesView(
                         containerColor = Lime600, // Hintergrundfarbe weiß
                         contentColor = Color.White,
                     ) {
-                        Icon(Icons.Default.Star, contentDescription = "Create")
+                        Icon(painterResource(R.drawable.wizard), contentDescription = "Create")
                     }
                 }
 

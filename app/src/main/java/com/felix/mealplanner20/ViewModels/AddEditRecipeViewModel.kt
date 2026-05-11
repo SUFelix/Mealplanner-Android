@@ -24,6 +24,9 @@ import com.felix.mealplanner20.Meals.Data.RecipeRepository
 import com.felix.mealplanner20.Meals.Data.helpers.UnitOfMeasure
 import com.felix.mealplanner20.R
 import com.felix.mealplanner20.Views.Recipes.PublishRequirement
+import com.felix.mealplanner20.apiService.WizardIngredient
+import com.felix.mealplanner20.apiService.WizardIngredientList
+import com.felix.mealplanner20.apiService.WizardResultHolder
 import com.felix.mealplanner20.use_cases.RecipeUseCases
 import com.felix.mealplanner20.use_cases.UpdateRecipeUseCase
 import com.felix.mealplanner20.use_cases.UploadRecipeUseCase
@@ -50,6 +53,7 @@ class AddEditRecipeViewModel @Inject constructor(
     private val recipeUseCase: RecipeUseCases,
     private val publishRecipeUseCase: UploadRecipeUseCase,
     private val updateRecipeUseCase: UpdateRecipeUseCase,
+    private val wizardResultHolder: WizardResultHolder,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -118,6 +122,12 @@ class AddEditRecipeViewModel @Inject constructor(
 
     private val _isPublishing = MutableStateFlow<Boolean>(false)
     val isPublishing: StateFlow<Boolean> = _isPublishing
+
+    private val _unmatchedWizardIngredients = MutableStateFlow<List<WizardIngredient>>(emptyList())
+    val unmatchedWizardIngredients: StateFlow<List<WizardIngredient>> = _unmatchedWizardIngredients.asStateFlow()
+
+    private val _isApplyingWizard = MutableStateFlow(false)
+    val isApplyingWizard: StateFlow<Boolean> = _isApplyingWizard.asStateFlow()
 
 
     private val recipeNameFlow: Flow<String> = snapshotFlow { _recipeName.value }
@@ -280,9 +290,111 @@ class AddEditRecipeViewModel @Inject constructor(
                 }
             }else{
                 _isLoading.value = false
+                wizardResultHolder.consume()?.let { pending ->
+                    viewModelScope.launch { applyWizardResult(pending) }
+                }
             }
         }
         Log.d("Recipe Info(_remoteId.value): ","${_remoteId.value}")
+    }
+
+    suspend fun applyWizardResult(result: WizardIngredientList) {
+        _isApplyingWizard.value = true
+        try {
+            var changed = false
+            result.recipeTitle?.takeIf { it.isNotBlank() }?.let {
+                _recipeName.value = it
+                changed = true
+            }
+
+            if (tempRecipe.id == 0L) {
+                tempRecipe = tempRecipe.copy(id = generateTempId())
+            }
+
+            val unmatched = mutableListOf<WizardIngredient>()
+            val additions = mutableListOf<IngredientWithRecipe>()
+            val existingIds = recipeIngredients.map { it.ingredientId }.toMutableSet()
+
+            for (item in result.ingredients) {
+                val matchedId = item.matchedIngredientId
+                if (matchedId == null) {
+                    unmatched += item
+                    continue
+                }
+                if (matchedId in existingIds) continue
+
+                val allowedUnitsRaw = withContext(Dispatchers.IO) {
+                    recipeRepository.getAllowedUnitsForIngredient(matchedId)
+                }
+                val mappedUnits = allowedUnitsRaw.mapNotNull { au ->
+                    val uomEnum = try { UnitOfMeasure.valueOf(au.unitOfMeasure) } catch (_: Exception) { null }
+                    uomEnum?.let { it to au.gramsPerUnit }
+                }
+                _allowedUnitsForIngredients.value =
+                    _allowedUnitsForIngredients.value + (matchedId to mappedUnits)
+
+                val parsedUnit = parseWizardUnit(item.unit)
+                val finalUnit = when {
+                    parsedUnit != null && mappedUnits.any { it.first == parsedUnit } -> parsedUnit
+                    mappedUnits.isNotEmpty() -> mappedUnits.first().first
+                    else -> parsedUnit ?: UnitOfMeasure.GRAM
+                }
+                val gramsPerUnit = mappedUnits.firstOrNull { it.first == finalUnit }?.second ?: 1f
+                val qty = item.amount?.toFloat()?.takeIf { it > 0f }
+                    ?: defaultQuantityForUnit(finalUnit)
+                val grams = qty * gramsPerUnit
+
+                additions += IngredientWithRecipe(
+                    recipeId = tempRecipe.id,
+                    ingredientId = matchedId,
+                    ingredientQuantity = grams,
+                    unitOfMeasure = finalUnit,
+                    originalQuantity = qty
+                )
+                existingIds += matchedId
+            }
+
+            if (additions.isNotEmpty()) {
+                recipeIngredients = recipeIngredients + additions
+                changed = true
+            }
+            if (changed) _isDirty.value = true
+            _unmatchedWizardIngredients.value = unmatched
+        } finally {
+            _isApplyingWizard.value = false
+        }
+    }
+
+    fun dismissUnmatchedWizardWarning() {
+        _unmatchedWizardIngredients.value = emptyList()
+    }
+
+    private fun parseWizardUnit(raw: String?): UnitOfMeasure? {
+        if (raw.isNullOrBlank()) return null
+        val key = raw.trim().lowercase().trimEnd('.', 's')
+        return when (key) {
+            "g", "gr", "gram", "gramm", "grams", "gramme" -> UnitOfMeasure.GRAM
+            "kg", "kilogram", "kilogramm" -> UnitOfMeasure.GRAM // Mengen werden über Faktor abgebildet; einfache Variante
+            "ml", "milliliter" -> UnitOfMeasure.MILLILITER
+            "l", "liter", "litre" -> UnitOfMeasure.LITER
+            "stk", "stück", "stueck", "piece", "pieces", "pc", "pcs" -> UnitOfMeasure.PIECE
+            "cup", "tasse", "tassen", "cups" -> UnitOfMeasure.CUP
+            "el", "essloeffel", "esslöffel", "tbsp", "tablespoon" -> UnitOfMeasure.TABLESPOON
+            "tl", "teeloeffel", "teelöffel", "tsp", "teaspoon" -> UnitOfMeasure.TEASPOON
+            "zehe", "zehen", "clove", "cloves" -> UnitOfMeasure.CLOVE
+            else -> try { UnitOfMeasure.valueOf(raw.trim().uppercase()) } catch (_: Exception) { null }
+        }
+    }
+
+    private fun defaultQuantityForUnit(unit: UnitOfMeasure): Float = when (unit) {
+        UnitOfMeasure.GRAM -> 100f
+        UnitOfMeasure.MILLILITER -> 100f
+        UnitOfMeasure.LITER -> 1f
+        UnitOfMeasure.PIECE -> 1f
+        UnitOfMeasure.CUP -> 1f
+        UnitOfMeasure.TABLESPOON -> 1f
+        UnitOfMeasure.TEASPOON -> 1f
+        UnitOfMeasure.CLOVE -> 1f
     }
     fun loadRecipe(recipeId: Long,checkForHasLoaded:Boolean) {
         if(!checkForHasLoaded or !hasLoaded){viewModelScope.launch {

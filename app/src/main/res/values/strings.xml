@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">MealPlanner</string>
+    <string name="wizard_applying_result">Applying wizard result…</string>
+    <string name="wizard_unmatched_title">Some ingredients could not be matched</string>
+    <string name="wizard_unmatched_description">The following ingredients were detected but no matching ingredient was found in your database. They were not added — please add them manually:</string>
     <string name="name">Name</string>
     <string name="add_ingredient">Add ingredient</string>
     <string name="update_ingredient">Update Ingredient</string>

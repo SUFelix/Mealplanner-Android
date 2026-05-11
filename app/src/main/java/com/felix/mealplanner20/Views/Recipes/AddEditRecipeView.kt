@@ -51,6 +51,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -62,6 +63,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -155,6 +157,8 @@ fun AddEditRecipeView(
     val publishRequirementNoUnsavedChanges by addEditRecipeViewModel.publishRequirementNoUnsavedChanges.collectAsState()
 
     val canEditRemote by addEditRecipeViewModel.canEditRemote.collectAsState()
+    val unmatchedWizardIngredients by addEditRecipeViewModel.unmatchedWizardIngredients.collectAsState()
+    val isApplyingWizard by addEditRecipeViewModel.isApplyingWizard.collectAsState()
 
     BackHandler(enabled = true) {
         if(changesMade) {
@@ -274,6 +278,23 @@ fun AddEditRecipeView(
             }
         }
     }
+    else if(isApplyingWizard){
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.background)
+                .wrapContentSize(Alignment.Center)
+        ) {
+            Column(verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+                MyCircularProgressIndicator()
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    style = MaterialTheme.typography.titleMedium,
+                    text = stringResource(R.string.wizard_applying_result)
+                )
+            }
+        }
+    }
     else{
     mainViewModel.setCurrentTopAppBarTitle(addEditRecipeViewModel.recipeName.value)
     Box(
@@ -295,6 +316,13 @@ fun AddEditRecipeView(
                         mainViewModel.setShowExitWithoutSaveAlertDialog(false)
                     },
                     onDismiss = { mainViewModel.setShowExitWithoutSaveAlertDialog(false) }
+                )
+            }
+
+            if (unmatchedWizardIngredients.isNotEmpty()) {
+                UnmatchedWizardIngredientsDialog(
+                    items = unmatchedWizardIngredients,
+                    onDismiss = { addEditRecipeViewModel.dismissUnmatchedWizardWarning() }
                 )
             }
 
@@ -1673,5 +1701,49 @@ data class PublishRequirement(
     val label: String,
     val isMet: Boolean
 )
+
+@Composable
+private fun UnmatchedWizardIngredientsDialog(
+    items: List<com.felix.mealplanner20.apiService.WizardIngredient>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Slate300,
+        title = {
+            Text(
+                style = MaterialTheme.typography.titleLarge,
+                text = stringResource(R.string.wizard_unmatched_title)
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(R.string.wizard_unmatched_description)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                items.forEach { item ->
+                    Text(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 2.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TomatoRed,
+                        text = "• ${item.originalText.ifBlank { item.name }}"
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    style = MaterialTheme.typography.labelLarge,
+                    text = stringResource(R.string.confirm)
+                )
+            }
+        }
+    )
+}
 
 

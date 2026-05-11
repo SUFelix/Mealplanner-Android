@@ -12,6 +12,7 @@ import com.felix.mealplanner20.Meals.Data.SettingsRepository
 import com.felix.mealplanner20.Meals.Data.helpers.uriToByteArray
 import com.felix.mealplanner20.apiService.WizardApiService
 import com.felix.mealplanner20.apiService.WizardIngredientList
+import com.felix.mealplanner20.apiService.WizardResultHolder
 import com.felix.mealplanner20.use_cases.NutritionBasicUseCases
 import com.mealplanner20.jwtauthktorandroid.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,7 +31,8 @@ class MyOwnRecipesViewModel @Inject constructor (
     private val nutritionUseCases: NutritionBasicUseCases,
     private val settingsRepository: SettingsRepository,
     private val wizardApiService: WizardApiService,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val wizardResultHolder: WizardResultHolder
 ): ViewModel() {
 
     lateinit var getAllRecipes: Flow<List<Recipe>>
@@ -49,6 +51,9 @@ class MyOwnRecipesViewModel @Inject constructor (
 
     private val _wizardError = MutableStateFlow<String?>(null)
     val wizardError: StateFlow<String?> = _wizardError
+
+    private val _navigateToWizardRecipe = MutableStateFlow(false)
+    val navigateToWizardRecipe: StateFlow<Boolean> = _navigateToWizardRecipe
 
     init {
         loadData()
@@ -90,7 +95,12 @@ class MyOwnRecipesViewModel @Inject constructor (
 
                 val response = wizardApiService.analyzeRecipeImage(body, headers)
                 if (response.isSuccessful) {
-                    _wizardResult.value = response.body()
+                    val result = response.body()
+                    _wizardResult.value = result
+                    if (result != null) {
+                        wizardResultHolder.set(result)
+                        _navigateToWizardRecipe.value = true
+                    }
                 } else {
                     _wizardError.value = "Wizard failed: ${response.code()} ${response.message()}"
                     Log.e("Wizard", "API error ${response.code()} - ${response.message()}")
@@ -107,5 +117,9 @@ class MyOwnRecipesViewModel @Inject constructor (
     fun consumeWizardResult() {
         _wizardResult.value = null
         _wizardError.value = null
+    }
+
+    fun consumeNavigateToWizardRecipe() {
+        _navigateToWizardRecipe.value = false
     }
 }
