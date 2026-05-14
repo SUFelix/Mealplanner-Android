@@ -1,6 +1,7 @@
 package com.felix.mealplanner20.ViewModels
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -9,6 +10,7 @@ import com.felix.mealplanner20.Meals.Data.Recipe
 import com.felix.mealplanner20.Meals.Data.RecipeCalories
 import com.felix.mealplanner20.Meals.Data.RecipeRepository
 import com.felix.mealplanner20.Meals.Data.SettingsRepository
+import com.felix.mealplanner20.Meals.Data.helpers.UserRoles
 import com.felix.mealplanner20.Meals.Data.helpers.uriToByteArray
 import com.felix.mealplanner20.apiService.WizardApiService
 import com.felix.mealplanner20.apiService.WizardIngredientList
@@ -18,7 +20,11 @@ import com.mealplanner20.jwtauthktorandroid.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -32,7 +38,8 @@ class MyOwnRecipesViewModel @Inject constructor (
     private val settingsRepository: SettingsRepository,
     private val wizardApiService: WizardApiService,
     private val authRepository: AuthRepository,
-    private val wizardResultHolder: WizardResultHolder
+    private val wizardResultHolder: WizardResultHolder,
+    private val prefs: SharedPreferences
 ): ViewModel() {
 
     lateinit var getAllRecipes: Flow<List<Recipe>>
@@ -55,8 +62,29 @@ class MyOwnRecipesViewModel @Inject constructor (
     private val _navigateToWizardRecipe = MutableStateFlow(false)
     val navigateToWizardRecipe: StateFlow<Boolean> = _navigateToWizardRecipe
 
+    private val _isLoggedIn = MutableStateFlow(false)
+    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+
+    private val _isPremium = MutableStateFlow(false)
+    val isPremium: StateFlow<Boolean> = _isPremium.asStateFlow()
+
+    val isWizardEnabled: StateFlow<Boolean> =
+        combine(_isLoggedIn, _isPremium) { loggedIn, premium -> loggedIn && premium }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
     init {
         loadData()
+        refreshUserStatus()
+    }
+
+    fun refreshUserStatus() {
+        viewModelScope.launch {
+            _isLoggedIn.value = authRepository.getToken() != null
+            val role = prefs.getString("role", null)?.let {
+                try { UserRoles.valueOf(it) } catch (_: IllegalArgumentException) { null }
+            }
+            _isPremium.value = role == UserRoles.PREMIUM || role == UserRoles.FOODADMIN
+        }
     }
 
     private fun loadData() {

@@ -71,7 +71,7 @@ fun MyOwnRecipesView(
 )
 {
     val isLoading by myOwnRecipesViewModel.isLoading.collectAsState()
-    val isLoggedinPremium = true //TODO
+    val isWizardEnabled by myOwnRecipesViewModel.isWizardEnabled.collectAsState()
     val myOwnRecipeList = myOwnRecipesViewModel.getAllRecipes.collectAsState(initial = listOf())
     val context = LocalContext.current
 
@@ -95,6 +95,10 @@ fun MyOwnRecipesView(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri?.let { myOwnRecipesViewModel.runWizardForImage(context, it) }
+    }
+
+    LaunchedEffect(Unit) {
+        myOwnRecipesViewModel.refreshUserStatus()
     }
 
     LaunchedEffect(wizardResult, wizardError) {
@@ -187,8 +191,26 @@ fun MyOwnRecipesView(
                     .padding(0.dp, 0.dp, 16.dp, 16.dp)
             ) {
                 Column {
+                    val wizardContainerColor = if (isWizardEnabled) {
+                        Lime600
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+                    }
+                    val wizardContentColor = if (isWizardEnabled) {
+                        Color.White
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                    }
                     FloatingActionButton(
                         onClick = {
+                            if (!isWizardEnabled) {
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.wizard_premium_required),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@FloatingActionButton
+                            }
                             if (photoPickerAvailable) {
                                 pickWizardImage.launch(
                                     androidx.activity.result.PickVisualMediaRequest(
@@ -201,8 +223,8 @@ fun MyOwnRecipesView(
                             }
                         },
                         shape = CircleShape,
-                        containerColor = Lime600, // Hintergrundfarbe weiß
-                        contentColor = Color.White,
+                        containerColor = wizardContainerColor,
+                        contentColor = wizardContentColor,
                     ) {
                         Icon(painterResource(R.drawable.wizard), contentDescription = "Create")
                     }

@@ -159,6 +159,7 @@ fun AddEditRecipeView(
     val canEditRemote by addEditRecipeViewModel.canEditRemote.collectAsState()
     val unmatchedWizardIngredients by addEditRecipeViewModel.unmatchedWizardIngredients.collectAsState()
     val isApplyingWizard by addEditRecipeViewModel.isApplyingWizard.collectAsState()
+    val wizardStepsAppliedCount by addEditRecipeViewModel.wizardStepsAppliedCount.collectAsState()
 
     BackHandler(enabled = true) {
         if(changesMade) {
@@ -364,6 +365,13 @@ fun AddEditRecipeView(
                     },
                     textColor = Color.White,
                     buttonColor = Lime600
+                )
+            }
+
+            if (wizardStepsAppliedCount > 0) {
+                WizardStepsAppliedBanner(
+                    count = wizardStepsAppliedCount,
+                    onDismiss = { addEditRecipeViewModel.dismissWizardStepsAppliedBanner() }
                 )
             }
 
@@ -1701,6 +1709,50 @@ data class PublishRequirement(
     val label: String,
     val isMet: Boolean
 )
+
+@Composable
+private fun WizardStepsAppliedBanner(
+    count: Int,
+    onDismiss: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Lime600.copy(alpha = 0.15f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, Lime600.copy(alpha = 0.5f))
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CheckCircle,
+                contentDescription = null,
+                tint = Lime600,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                modifier = Modifier.weight(1f),
+                text = stringResource(R.string.wizard_steps_auto_filled, count),
+                style = MaterialTheme.typography.bodySmall,
+                color = Slate950
+            )
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = stringResource(R.string.wizard_steps_auto_filled_dismiss),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Lime600
+                )
+            }
+        }
+    }
+}
 
 @Composable
 private fun UnmatchedWizardIngredientsDialog(

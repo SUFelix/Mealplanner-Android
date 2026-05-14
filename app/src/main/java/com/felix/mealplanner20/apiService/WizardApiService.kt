@@ -23,7 +23,8 @@ interface WizardApiService {
 @Serializable
 data class WizardIngredientList(
     val ingredients: List<WizardIngredient>,
-    val recipeTitle: String? = null
+    val recipeTitle: String? = null,
+    val steps: List<WizardStep> = emptyList()
 )
 
 @Serializable
@@ -33,4 +34,10 @@ data class WizardIngredient(
     val unit: String? = null,
     val originalText: String,
     val matchedIngredientId: Long? = null
+)
+
+@Serializable
+data class WizardStep(
+    val stepNumber: Int,
+    val text: String
 )

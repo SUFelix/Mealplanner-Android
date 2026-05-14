@@ -4,6 +4,9 @@
     <string name="wizard_applying_result">Wizard-Ergebnis wird übernommen…</string>
     <string name="wizard_unmatched_title">Einige Zutaten konnten nicht gematcht werden</string>
     <string name="wizard_unmatched_description">Die folgenden Zutaten wurden erkannt, aber in deiner Datenbank wurde kein passendes Pendant gefunden. Sie wurden nicht hinzugefügt — bitte trage sie manuell nach:</string>
+    <string name="wizard_steps_auto_filled">%1$d Schritt(e) wurden automatisch aus dem Wizard übernommen. Bitte überprüfe sie.</string>
+    <string name="wizard_steps_auto_filled_dismiss">Verstanden</string>
+    <string name="wizard_premium_required">Dieses Feature ist nur für Premium-Nutzer verfügbar.</string>
     <string name="name">Name</string>
     <string name="add_ingredient">Zutat hinzufügen</string>
     <string name="update_ingredient">Zutat aktualisieren</string>

@@ -3,6 +3,9 @@
     <string name="wizard_applying_result">Applying wizard result…</string>
     <string name="wizard_unmatched_title">Some ingredients could not be matched</string>
     <string name="wizard_unmatched_description">The following ingredients were detected but no matching ingredient was found in your database. They were not added — please add them manually:</string>
+    <string name="wizard_steps_auto_filled">%1$d step(s) were filled in automatically from the wizard. Please review them.</string>
+    <string name="wizard_steps_auto_filled_dismiss">Got it</string>
+    <string name="wizard_premium_required">This feature is only available for premium users.</string>
     <string name="name">Name</string>
     <string name="add_ingredient">Add ingredient</string>
     <string name="update_ingredient">Update Ingredient</string>

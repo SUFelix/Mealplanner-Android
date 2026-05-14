@@ -129,6 +129,9 @@ class AddEditRecipeViewModel @Inject constructor(
     private val _isApplyingWizard = MutableStateFlow(false)
     val isApplyingWizard: StateFlow<Boolean> = _isApplyingWizard.asStateFlow()
 
+    private val _wizardStepsAppliedCount = MutableStateFlow(0)
+    val wizardStepsAppliedCount: StateFlow<Int> = _wizardStepsAppliedCount.asStateFlow()
+
 
     private val recipeNameFlow: Flow<String> = snapshotFlow { _recipeName.value }
 
@@ -302,9 +305,11 @@ class AddEditRecipeViewModel @Inject constructor(
         _isApplyingWizard.value = true
         try {
             var changed = false
-            result.recipeTitle?.takeIf { it.isNotBlank() }?.let {
-                _recipeName.value = it
-                changed = true
+            result.recipeTitle?.takeIf { it.isNotBlank() }?.let { wizardTitle ->
+                if (_recipeName.value.isBlank()) {
+                    _recipeName.value = wizardTitle
+                    changed = true
+                }
             }
 
             if (tempRecipe.id == 0L) {
@@ -358,11 +363,52 @@ class AddEditRecipeViewModel @Inject constructor(
                 recipeIngredients = recipeIngredients + additions
                 changed = true
             }
+
+            val appliedStepsCount = applyWizardSteps(result.steps)
+            if (appliedStepsCount > 0) changed = true
+
             if (changed) _isDirty.value = true
             _unmatchedWizardIngredients.value = unmatched
         } finally {
             _isApplyingWizard.value = false
         }
+    }
+
+    private fun applyWizardSteps(steps: List<com.felix.mealplanner20.apiService.WizardStep>): Int {
+        val sanitized = steps
+            .filter { it.text.isNotBlank() }
+            .sortedBy { it.stepNumber }
+        if (sanitized.isEmpty()) {
+            _wizardStepsAppliedCount.value = 0
+            return 0
+        }
+
+        if (tempRecipe.id == 0L) {
+            tempRecipe = tempRecipe.copy(id = generateTempId())
+        }
+
+        val existing = _recipeDescriptionSteps.value.orEmpty()
+        val startNr = existing.size + 1
+        val tempRecipeIdInt = tempRecipe.id.toInt()
+
+        val newSteps = sanitized.mapIndexed { index, step ->
+            RecipeDescription(
+                recipeId = tempRecipeIdInt,
+                stepNr = startNr + index,
+                text = step.text.trim(),
+                englishText = step.text.trim(),
+                germanText = step.text.trim(),
+                imgUri = null
+            )
+        }
+
+        _recipeDescriptionSteps.value = existing + newSteps
+        _wizardStepsAppliedCount.value = newSteps.size
+        return newSteps.size
+    }
+
+    fun dismissWizardStepsAppliedBanner() {
+        _wizardStepsAppliedCount.value = 0
     }
 
     fun dismissUnmatchedWizardWarning() {

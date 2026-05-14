@@ -88,8 +88,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 
-const val BASE_URL = "http://192.168.0.95:8080"
-//const val BASE_URL = "https://www.mealplannerpro.net/"
+const val BASE_URL = "https://www.mealplannerpro.net/"
 
 @Module
 @InstallIn(SingletonComponent::class)
