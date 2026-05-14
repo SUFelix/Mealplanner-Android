@@ -11,7 +11,7 @@ import com.felix.mealplanner20.Meals.Data.RecipeCalories
 import com.felix.mealplanner20.Meals.Data.RecipeRepository
 import com.felix.mealplanner20.Meals.Data.SettingsRepository
 import com.felix.mealplanner20.Meals.Data.helpers.UserRoles
-import com.felix.mealplanner20.Meals.Data.helpers.uriToByteArray
+import com.felix.mealplanner20.Meals.Data.helpers.uriToScaledJpegBytes
 import com.felix.mealplanner20.apiService.WizardApiService
 import com.felix.mealplanner20.apiService.WizardIngredientList
 import com.felix.mealplanner20.apiService.WizardResultHolder
@@ -112,7 +112,7 @@ class MyOwnRecipesViewModel @Inject constructor (
                     _wizardError.value = "Not logged in"
                     return@launch
                 }
-                val bytes = uriToByteArray(context, uri)
+                val bytes = uriToScaledJpegBytes(context, uri)
                 if (bytes == null) {
                     _wizardError.value = "Could not read image"
                     return@launch
