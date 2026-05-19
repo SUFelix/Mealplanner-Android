@@ -677,7 +677,7 @@ fun SettingsBlock3( settingsViewModel: SettingsViewModel){
         }
 
         CustomBooleanSetting(
-            text = "Show original Titles",
+            text = stringResource(R.string.show_original_titles),
             value = settingsViewModel.showOriginalTitle,
             onValueChange = {settingsViewModel.updateShowOriginalTitle(it)},
             isLast = true
