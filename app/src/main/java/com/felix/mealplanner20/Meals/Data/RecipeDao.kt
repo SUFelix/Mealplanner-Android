@@ -92,4 +92,7 @@ interface RecipeDao {
 
 @Query("""UPDATE recipe_table SET remote_id = :remoteId WHERE id = :recipeId""")
 suspend fun setRemoteId(recipeId: Long, remoteId: Long)
+
+@Query("""UPDATE recipe_table SET createdBy = :createdBy WHERE id = :recipeId""")
+suspend fun setCreatedBy(recipeId: Long, createdBy: String?)
 }
