@@ -187,7 +187,10 @@ fun Navigation(
                         },
                         onDreiPunkteClick = {
                             navController.navigate(Screen.TopAppBarScreen.SendFeedback(context).route)
-                        }  ,
+                        },
+                        onShowTutorialClick = {
+                            mainViewModel.showOnboardingAgain()
+                        },
                         profileViewModel = profileViewModel,
                         signInViewModel = signInViewModel
                     )

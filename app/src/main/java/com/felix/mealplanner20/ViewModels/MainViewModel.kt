@@ -6,16 +6,48 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.felix.mealplanner20.Meals.Data.Settings
+import com.felix.mealplanner20.Meals.Data.SettingsRepository
 import com.felix.mealplanner20.Screen
 import com.felix.mealplanner20.use_cases.CleanUnusedRecipeImagesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel @Inject constructor(context: Context,private val cleanUnusedRecipeImagesUseCase: CleanUnusedRecipeImagesUseCase) : ViewModel() {
+class MainViewModel @Inject constructor(
+    context: Context,
+    private val cleanUnusedRecipeImagesUseCase: CleanUnusedRecipeImagesUseCase,
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
+
+    private val _showOnboarding = MutableStateFlow<Boolean?>(null)
+    val showOnboarding: StateFlow<Boolean?> = _showOnboarding
+
+    init {
+        viewModelScope.launch {
+            val settings = settingsRepository.getSettings()
+            _showOnboarding.value = settings == null || !settings.hasSeenOnboarding
+        }
+    }
+
+    fun markOnboardingSeen() {
+        viewModelScope.launch {
+            withContext(NonCancellable) {
+                val s = settingsRepository.getSettings() ?: Settings()
+                settingsRepository.saveSettings(s.copy(hasSeenOnboarding = true))
+            }
+            _showOnboarding.value = false
+        }
+    }
+
+    fun showOnboardingAgain() {
+        _showOnboarding.value = true
+    }
     private val _currentScreen: MutableState<Screen> = mutableStateOf(Screen.BottomScreen.CatalogScreen(context))
 
     val currentScreen: MutableState<Screen>

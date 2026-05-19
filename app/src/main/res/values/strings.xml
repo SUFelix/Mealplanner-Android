@@ -195,4 +195,18 @@
     <string name="piece">" piece"</string>
     <string name="search_recipes">Search Recipes</string>
     <string name="recipe_updated_successfully">Updated Successfully</string>
+    <string name="onboarding_slide1_title">Welcome to MealPlanner</string>
+    <string name="onboarding_slide1_description">Your personal meal planning companion. Let\'s show you around!</string>
+    <string name="onboarding_slide2_title">My Recipes &amp; Discover</string>
+    <string name="onboarding_slide2_description">Browse the community catalog, download your favorites, modify them as needed and create your own recipes.</string>
+    <string name="onboarding_slide3_title">Meal Planning</string>
+    <string name="onboarding_slide3_description">Plan every meal for a chosen amount of days. Created automatically and adjusted manually if wanted.</string>
+    <string name="onboarding_slide4_title">Nutrition Tracking</string>
+    <string name="onboarding_slide4_description">See your daily calories, macros, and DGE food group coverage at a glance.</string>
+    <string name="onboarding_slide5_title">Smart Shopping List</string>
+    <string name="onboarding_slide5_description">Your shopping list is generated automatically from your meal plan with exact quantities.</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get Started</string>
+    <string name="show_tutorial">Show Tutorial</string>
 </resources>

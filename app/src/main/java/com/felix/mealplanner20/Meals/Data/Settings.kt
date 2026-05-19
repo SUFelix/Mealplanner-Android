@@ -44,7 +44,9 @@ data class Settings(
     @ColumnInfo(name = "profilePictureLocalUri")
     var profilePictureLocalUri: Uri? = null,
     @ColumnInfo(name = "showOriginalTitle")
-    var showOriginalTitle: Boolean = false
+    var showOriginalTitle: Boolean = false,
+    @ColumnInfo(name = "hasSeenOnboarding")
+    var hasSeenOnboarding: Boolean = false
 )
 
  fun defaultSettings(): Settings {
