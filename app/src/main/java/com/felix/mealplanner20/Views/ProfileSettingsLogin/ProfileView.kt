@@ -526,8 +526,7 @@ fun Settings(
             .background(color = MaterialTheme.colorScheme.background)
             .padding(12.dp)
     ){
-        val showResetSettingsAlertDialog = settingsViewModel.showResetSettingsAlertDialog.collectAsState()
-        if (showResetSettingsAlertDialog.value) {
+        if (settingsViewModel.showResetSettingsAlertDialog) {
             CustomAlertDialog(
                 onConfirm = {
                     settingsViewModel.resetSettings()
@@ -584,15 +583,15 @@ fun SettingsBlock1( settingsViewModel: SettingsViewModel){
         IntSetting(
             text = stringResource(R.string.meals_per_day),
             value = settingsViewModel.mealsPerDay,
-            onValueChange = {settingsViewModel.onMealssperDayValueChange(it)})
+            onValueChange = {settingsViewModel.updateMealsPerDay(it)})
         IntSetting(
             text = stringResource(R.string.breakfasts_per_day),
             value = settingsViewModel.breakfastsPerDay,
-            onValueChange = {settingsViewModel.onBreakfastsperDayValueChange(it)})
+            onValueChange = {settingsViewModel.updateBreakfastsPerDay(it)})
         IntSetting(
             text = stringResource(R.string.snacks_per_day),
             value = settingsViewModel.snacksPerDay,
-            onValueChange = {settingsViewModel.onSnacksperDayValueChange(it)},
+            onValueChange = {settingsViewModel.updateSnacksPerDay(it)},
             isLast = true)
     }
 }

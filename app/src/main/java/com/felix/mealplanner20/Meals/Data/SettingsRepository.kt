@@ -16,11 +16,7 @@ class SettingsRepository(private val settingsDao: SettingsDao) {
 
     suspend fun saveSettings(settings: Settings) {
         withContext(Dispatchers.IO) {
-            if (settingsDao.getSettings(0) == null) {
-                settingsDao.insertSettings(settings)
-            } else {
-                settingsDao.updateSettings(settings)
-            }
+            settingsDao.insertSettings(settings)
         }
     }
 
