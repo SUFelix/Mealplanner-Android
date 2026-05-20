@@ -99,6 +99,7 @@ fun MainView (){
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
+    val showOnboarding by mainViewModel.showOnboarding.collectAsState()
 
     val title = remember {
         mutableStateOf(mainViewModel.currentScreen.value.title)
@@ -277,6 +278,10 @@ fun MainView (){
             .padding(paddingValues)){
             Navigation(navController = navController, ingredientViewModel = ingredientViewModel, mainViewModel = mainViewModel, settingsViewModel = settingsViewModel)
         }
+    }
+
+    if (showOnboarding == true) {
+        OnboardingScreen(onFinish = { mainViewModel.markOnboardingSeen() })
     }
 }
 

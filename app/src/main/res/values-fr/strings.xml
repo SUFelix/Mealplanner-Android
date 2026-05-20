@@ -183,4 +183,19 @@
     <string name="piece">" piece"</string>
     <string name="search_recipes">Rechercher des recettes</string>
     <string name="recipe_updated_successfully">Modifié avec succès</string>
+    <string name="onboarding_slide1_title">Bienvenue dans MealPlanner</string>
+    <string name="onboarding_slide1_description">Ton compagnon personnel pour planifier tes repas. Laisse-nous te faire visiter !</string>
+    <string name="onboarding_slide2_title">Mes recettes &amp; Découvrir</string>
+    <string name="onboarding_slide2_description">Parcours le catalogue de la communauté, télécharge tes favoris, modifie-les selon tes besoins et crée tes propres recettes.</string>
+    <string name="onboarding_slide3_title">Planification des repas</string>
+    <string name="onboarding_slide3_description">Planifie chaque repas pour un nombre de jours choisi. Créé automatiquement et ajusté manuellement si souhaité.</string>
+    <string name="onboarding_slide4_title">Suivi nutritionnel</string>
+    <string name="onboarding_slide4_description">Visualise tes calories journalières, tes macros et la couverture des groupes alimentaires DGE en un coup d\'œil.</string>
+    <string name="onboarding_slide5_title">Liste de courses intelligente</string>
+    <string name="onboarding_slide5_description">Ta liste de courses est générée automatiquement à partir de ton plan de repas avec les quantités exactes.</string>
+    <string name="onboarding_skip">Passer</string>
+    <string name="onboarding_next">Suivant</string>
+    <string name="onboarding_get_started">Commencer</string>
+    <string name="show_tutorial">Show Tutorial</string>
+    <string name="show_original_titles">Show original Titles</string>
 </resources>

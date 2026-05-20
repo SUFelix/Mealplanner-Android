@@ -15,8 +15,7 @@ import com.felix.mealplanner20.Meals.Data.Settings
 import com.felix.mealplanner20.Meals.Data.SettingsRepository
 import com.felix.mealplanner20.Meals.Data.helpers.Language
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -47,36 +46,40 @@ class SettingsViewModel @Inject constructor (private val repository: SettingsRep
         private set
     var showOriginalTitle by mutableStateOf(false)
         private set
+    var hasSeenOnboarding by mutableStateOf(false)
+        private set
+    private var enableDynamicColors by mutableStateOf(true)
+    private var profilePictureLocalUri by mutableStateOf<Uri?>(null)
 
-   // private val _localProfilPictureimgUri = mutableStateOf<Uri?>(null)
-   // val localProfilPictureimgUri: State<Uri?> = _localProfilPictureimgUri
-
-    private val _showResetSettingsAlertDialog = MutableStateFlow(false)
-    val showResetSettingsAlertDialog: StateFlow<Boolean> = _showResetSettingsAlertDialog
+    var showResetSettingsAlertDialog by mutableStateOf(false)
+        private set
 
     fun toggleResetSettingsDialog(show: Boolean) {
-        _showResetSettingsAlertDialog.value = show
+        showResetSettingsAlertDialog = show
     }
 
-init {
-    loadSettings()
-}
-    fun loadSettings() = viewModelScope.launch {
-        val settings = repository.getSettings()
-        if (settings != null) {
-            mealsPerDay = settings.mealsPerDay
-            breakfastsPerDay = settings.breakfastsPerDay
-            snacksPerDay = settings.snacksPerDay
-            planningHorizonInDays = settings.planningHorizonInDays
-            vegan = settings.vegan
-            vegetarian = settings.vegetarian
-            language = settings.language
-            calorieRequirement = settings.calorieRequirement
-            proteinRequirement = settings.proteinRequirement
-            fatRequirement = settings.fatRequirement
-            showOriginalTitle = settings.showOriginalTitle
-        } else {
-            saveSettings()
+    init {
+        viewModelScope.launch {
+            repository.observeSettings().collectLatest { settings ->
+                if (settings != null) {
+                    mealsPerDay = settings.mealsPerDay
+                    breakfastsPerDay = settings.breakfastsPerDay
+                    snacksPerDay = settings.snacksPerDay
+                    planningHorizonInDays = settings.planningHorizonInDays
+                    vegan = settings.vegan
+                    vegetarian = settings.vegetarian
+                    language = settings.language
+                    calorieRequirement = settings.calorieRequirement
+                    proteinRequirement = settings.proteinRequirement
+                    fatRequirement = settings.fatRequirement
+                    showOriginalTitle = settings.showOriginalTitle
+                    hasSeenOnboarding = settings.hasSeenOnboarding
+                    enableDynamicColors = settings.enableDynamicColors
+                    profilePictureLocalUri = settings.profilePictureLocalUri
+                } else {
+                    saveSettings()
+                }
+            }
         }
     }
 
@@ -92,7 +95,10 @@ init {
             breakfastsPerDay = breakfastsPerDay,
             snacksPerDay = snacksPerDay,
             planningHorizonInDays = planningHorizonInDays,
-            showOriginalTitle = showOriginalTitle
+            showOriginalTitle = showOriginalTitle,
+            hasSeenOnboarding = hasSeenOnboarding,
+            enableDynamicColors = enableDynamicColors,
+            profilePictureLocalUri = profilePictureLocalUri
         )
         repository.saveSettings(settings)
     }
@@ -142,8 +148,11 @@ init {
         showOriginalTitle = value
     }
 
+    fun updateHasSeenOnboarding(value: Boolean) {
+        hasSeenOnboarding = value
+    }
+
     fun resetSettings() = viewModelScope.launch {
-        repository.deleteAllSettings()
         vegan = false
         vegetarian = false
         mealsPerDay = MEALS_PER_DAY_DEFAULT_VALUE
@@ -158,13 +167,4 @@ init {
         saveSettings()
     }
 
-    fun onSnacksperDayValueChange(newValue: Int) {
-        snacksPerDay = newValue
-    }
-    fun onMealssperDayValueChange(newValue: Int) {
-        mealsPerDay = newValue
-    }
-    fun onBreakfastsperDayValueChange(newValue: Int) {
-        breakfastsPerDay = newValue
-    }
 }

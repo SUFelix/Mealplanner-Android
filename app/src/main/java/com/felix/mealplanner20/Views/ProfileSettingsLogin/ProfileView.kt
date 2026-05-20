@@ -111,7 +111,8 @@ fun ProfileView(
     onSignUpClick:()->Unit,
     onSignInClick:()->Unit,
     onAdvancedSettingsClick:()->Unit,
-    onDreiPunkteClick:() -> Unit
+    onDreiPunkteClick:() -> Unit,
+    onShowTutorialClick: () -> Unit
     ) {
 
     val p  = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -148,6 +149,13 @@ fun ProfileView(
             text  = stringResource(R.string.advanced_settings),
             buttonColor= Lime600,
             textColor = Color.White,
+            borderColor = Lime600
+        )
+        CustomFullWidthButton(
+            onClick = { onShowTutorialClick() },
+            text = stringResource(R.string.show_tutorial),
+            buttonColor = Slate950,
+            textColor = Lime600,
             borderColor = Lime600
         )
     }
@@ -518,8 +526,7 @@ fun Settings(
             .background(color = MaterialTheme.colorScheme.background)
             .padding(12.dp)
     ){
-        val showResetSettingsAlertDialog = settingsViewModel.showResetSettingsAlertDialog.collectAsState()
-        if (showResetSettingsAlertDialog.value) {
+        if (settingsViewModel.showResetSettingsAlertDialog) {
             CustomAlertDialog(
                 onConfirm = {
                     settingsViewModel.resetSettings()
@@ -576,15 +583,15 @@ fun SettingsBlock1( settingsViewModel: SettingsViewModel){
         IntSetting(
             text = stringResource(R.string.meals_per_day),
             value = settingsViewModel.mealsPerDay,
-            onValueChange = {settingsViewModel.onMealssperDayValueChange(it)})
+            onValueChange = {settingsViewModel.updateMealsPerDay(it)})
         IntSetting(
             text = stringResource(R.string.breakfasts_per_day),
             value = settingsViewModel.breakfastsPerDay,
-            onValueChange = {settingsViewModel.onBreakfastsperDayValueChange(it)})
+            onValueChange = {settingsViewModel.updateBreakfastsPerDay(it)})
         IntSetting(
             text = stringResource(R.string.snacks_per_day),
             value = settingsViewModel.snacksPerDay,
-            onValueChange = {settingsViewModel.onSnacksperDayValueChange(it)},
+            onValueChange = {settingsViewModel.updateSnacksPerDay(it)},
             isLast = true)
     }
 }
@@ -669,7 +676,7 @@ fun SettingsBlock3( settingsViewModel: SettingsViewModel){
         }
 
         CustomBooleanSetting(
-            text = "Show original Titles",
+            text = stringResource(R.string.show_original_titles),
             value = settingsViewModel.showOriginalTitle,
             onValueChange = {settingsViewModel.updateShowOriginalTitle(it)},
             isLast = true

@@ -30,6 +30,7 @@ import com.felix.mealplanner20.apiService.WizardResultHolder
 import com.felix.mealplanner20.use_cases.RecipeUseCases
 import com.felix.mealplanner20.use_cases.UpdateRecipeUseCase
 import com.felix.mealplanner20.use_cases.UploadRecipeUseCase
+import com.mealplanner20.jwtauthktorandroid.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +55,7 @@ class AddEditRecipeViewModel @Inject constructor(
     private val publishRecipeUseCase: UploadRecipeUseCase,
     private val updateRecipeUseCase: UpdateRecipeUseCase,
     private val wizardResultHolder: WizardResultHolder,
+    private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -280,6 +282,7 @@ class AddEditRecipeViewModel @Inject constructor(
                         _isDessert.value = myRecipe.isDessert
                         _servings.value = myRecipe.servings
                         _imgUri.value = myRecipe.imgUri
+                        _createdBy.value = myRecipe.createdBy ?: EMPTY_STRING
                         recipeUseCase.getAllIngredientsForOneRecipeUseCase(it)
                         _recipeDescriptionSteps.value = recipeRepository.getRecipeDescriptionStepsByRecipeId(myRecipe.id)
                         _isLoading.value = false
@@ -1008,21 +1011,27 @@ class AddEditRecipeViewModel @Inject constructor(
 
             when (result) {
                 is PublishRecipeResult.Success -> {
-                    if (_remoteId.value != null) {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.recipe_updated_successfully),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        recipeRepository.setRemoteId(localRecipeId,result.remoteId)
-                        resetBaselineToCurrent()
-                    } else {
-                        Toast.makeText(
-                            context,
-                            context.getString(R.string.dein_rezept_wurde_erfolgreich_ver_ffentlicht),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                    val wasUpdate = _remoteId.value != null
+                    recipeRepository.setRemoteId(localRecipeId, result.remoteId)
+                    _remoteId.value = result.remoteId
+                    if (!wasUpdate) {
+                        authRepository.getUsernameClaim()?.let { username ->
+                            recipeRepository.setCreatedBy(localRecipeId, username)
+                            _createdBy.value = username
+                        }
                     }
+                    resetBaselineToCurrent()
+                    recomputeUpdatePermission()
+                    val msgRes = if (wasUpdate) {
+                        R.string.recipe_updated_successfully
+                    } else {
+                        R.string.dein_rezept_wurde_erfolgreich_ver_ffentlicht
+                    }
+                    Toast.makeText(
+                        context,
+                        context.getString(msgRes),
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
                 is PublishRecipeResult.LoginRequired -> {
                     Toast.makeText(

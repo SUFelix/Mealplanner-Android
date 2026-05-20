@@ -192,4 +192,19 @@
     <string name="piece">" Stück"</string>
     <string name="search_recipes">Rezepte suchen</string>
     <string name="recipe_updated_successfully">Erfolgreich verändert</string>
+    <string name="onboarding_slide1_title">Willkommen bei MealPlanner</string>
+    <string name="onboarding_slide1_description">Dein persönlicher Mahlzeitenplaner. Lass uns dir alles zeigen!</string>
+    <string name="onboarding_slide2_title">Meine Rezepte &amp; Entdecken</string>
+    <string name="onboarding_slide2_description">Durchstöbere den Community-Katalog, lade deine Lieblingsrezepte herunter, passe sie an und erstelle eigene Rezepte.</string>
+    <string name="onboarding_slide3_title">Mahlzeitenplanung</string>
+    <string name="onboarding_slide3_description">Plane jede Mahlzeit für eine beliebige Anzahl von Tagen. Automatisch erstellt und bei Bedarf manuell angepasst.</string>
+    <string name="onboarding_slide4_title">Ernährungstracking</string>
+    <string name="onboarding_slide4_description">Sieh deine täglichen Kalorien, Makros und die DGE-Lebensmittelgruppen auf einen Blick.</string>
+    <string name="onboarding_slide5_title">Smarte Einkaufsliste</string>
+    <string name="onboarding_slide5_description">Deine Einkaufsliste wird automatisch aus deinem Essensplan mit genauen Mengenangaben erstellt.</string>
+    <string name="onboarding_skip">Überspringen</string>
+    <string name="onboarding_next">Weiter</string>
+    <string name="onboarding_get_started">Los geht\'s</string>
+    <string name="show_tutorial">Tutorial anzeigen</string>
+    <string name="show_original_titles">Originaltitel anzeigen</string>
 </resources>

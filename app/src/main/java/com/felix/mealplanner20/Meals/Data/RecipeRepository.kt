@@ -536,6 +536,10 @@ class RecipeRepository @Inject constructor(
         recipeDao.setRemoteId(localId, remoteId)
         Log.d("setting remote id to :","${remoteId}")
     }
+
+    suspend fun setCreatedBy(localId: Long, createdBy: String?) {
+        recipeDao.setCreatedBy(localId, createdBy)
+    }
 }
 
 

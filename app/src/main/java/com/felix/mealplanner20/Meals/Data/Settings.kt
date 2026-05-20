@@ -20,31 +20,33 @@ data class Settings(
     @PrimaryKey
     val id: Int = 0,
     @ColumnInfo(name = "enableDynamicColors")
-    var enableDynamicColors: Boolean = true,//TODO ggf wieder enfernen oder nutzbar machen
+    val enableDynamicColors: Boolean = true,//TODO ggf wieder enfernen oder nutzbar machen
     @ColumnInfo(name = "mealsPerDay")
-    var mealsPerDay: Int = MEALS_PER_DAY_DEFAULT_VALUE,
+    val mealsPerDay: Int = MEALS_PER_DAY_DEFAULT_VALUE,
     @ColumnInfo(name = "breakfastsPerDay")
-    var breakfastsPerDay: Int = BREAKFASTS_PER_DAY_DEFAULT_VALUE,
+    val breakfastsPerDay: Int = BREAKFASTS_PER_DAY_DEFAULT_VALUE,
     @ColumnInfo(name = "snacksPerDay")
-    var snacksPerDay: Int = SNACKS_PER_DAY_DEFAULT_VALUE,
+    val snacksPerDay: Int = SNACKS_PER_DAY_DEFAULT_VALUE,
     @ColumnInfo(name = "planningHorizonInDays")
-    var planningHorizonInDays: Int = PLANNING_HORIZON_IN_DAYS_DEFAULT_VALUE,
+    val planningHorizonInDays: Int = PLANNING_HORIZON_IN_DAYS_DEFAULT_VALUE,
     @ColumnInfo(name = "vegan")
-    var vegan: Boolean = false,
+    val vegan: Boolean = false,
     @ColumnInfo(name = "vegetarian")
-    var vegetarian: Boolean = false,
+    val vegetarian: Boolean = false,
     @ColumnInfo(name = "language")
-    var language: Language = Language.ENGLISH,
+    val language: Language = Language.ENGLISH,
     @ColumnInfo(name = "calorieRequirement")
-    var calorieRequirement: Int = CALORIE_REQUIREMENT_DEFAULT_VALUE,
+    val calorieRequirement: Int = CALORIE_REQUIREMENT_DEFAULT_VALUE,
     @ColumnInfo(name = "proteinRequirement")
-    var proteinRequirement: Int = PROTEIN_REQUIREMENT_DEFAULT_VALUE,
+    val proteinRequirement: Int = PROTEIN_REQUIREMENT_DEFAULT_VALUE,
     @ColumnInfo(name = "fatRequirement")
-    var fatRequirement: Int = FAT_REQUIREMENT_DEFAULT_VALUE,
+    val fatRequirement: Int = FAT_REQUIREMENT_DEFAULT_VALUE,
     @ColumnInfo(name = "profilePictureLocalUri")
-    var profilePictureLocalUri: Uri? = null,
+    val profilePictureLocalUri: Uri? = null,
     @ColumnInfo(name = "showOriginalTitle")
-    var showOriginalTitle: Boolean = false
+    val showOriginalTitle: Boolean = false,
+    @ColumnInfo(name = "hasSeenOnboarding")
+    val hasSeenOnboarding: Boolean = false
 )
 
  fun defaultSettings(): Settings {
@@ -56,9 +58,9 @@ data class Settings(
         vegan = false,
         vegetarian = false,
         language = Language.ENGLISH,
-        calorieRequirement = 2000,
-        proteinRequirement = 75,
-        fatRequirement = 70
+        calorieRequirement = CALORIE_REQUIREMENT_DEFAULT_VALUE,
+        proteinRequirement = PROTEIN_REQUIREMENT_DEFAULT_VALUE,
+        fatRequirement = FAT_REQUIREMENT_DEFAULT_VALUE
     )
 }
 
