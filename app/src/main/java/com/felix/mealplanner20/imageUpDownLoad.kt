@@ -30,13 +30,12 @@ class ImageUpDownLoad @Inject constructor(
                 BUCKET.PROFILE-> imageApiService.uploadProfileImage(body,headers)
                 BUCKET.DESCRIPTION -> imageApiService.uploadDescriptionImage(body,headers)
             }
-            val body1 = response.body()
             if (response.isSuccessful) {
-
-                Result.success(body1?: "Erfolgreich hochgeladen!")
-
+                Result.success(response.body()?.string() ?: "OK")
             } else {
-                Result.failure(Exception("Fehler: ${response.code()} - ${response.message()}"))
+                val errorBody = response.errorBody()?.string() ?: "(no body)"
+                Log.e("UploadImage", "HTTP ${response.code()} bucket=$bucket code=${code.take(8)} — $errorBody")
+                Result.failure(Exception("HTTP ${response.code()} - ${response.message()} | $errorBody"))
             }
         } catch (e: Exception) {
             Result.failure(e)

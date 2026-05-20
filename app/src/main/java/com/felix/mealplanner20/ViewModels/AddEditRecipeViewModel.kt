@@ -289,7 +289,7 @@ class AddEditRecipeViewModel @Inject constructor(
 
                         originalRecipeImgUri = _imgUri.value
                         originalStepImgById = _recipeDescriptionSteps.value
-                            ?.associate { it.id to it.imgUri }
+                            ?.associate { it.id to null }
                             ?: emptyMap()
                         recomputeUpdatePermission()
                     }
@@ -469,7 +469,7 @@ class AddEditRecipeViewModel @Inject constructor(
 
                     originalRecipeImgUri = _imgUri.value
                     originalStepImgById = _recipeDescriptionSteps.value
-                        ?.associate { it.id to it.imgUri }
+                        ?.associate { it.id to null }
                         ?: emptyMap()
                     recomputeUpdatePermission()
                 }

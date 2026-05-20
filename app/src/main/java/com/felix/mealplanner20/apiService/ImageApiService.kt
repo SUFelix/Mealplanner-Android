@@ -61,19 +61,19 @@ interface ImageApiService {
     suspend fun uploadRecipeImage(
         @Part image: MultipartBody.Part,
         @HeaderMap headers: Map<String, String>
-    ): Response<String>
+    ): Response<ResponseBody>
 
     @Multipart
     @POST("/images/profile")
     suspend fun uploadProfileImage(
         @Part image: MultipartBody.Part,
         @HeaderMap headers: Map<String, String>
-    ): Response<String>
+    ): Response<ResponseBody>
 
     @Multipart
     @POST("/images/description")
     suspend fun uploadDescriptionImage(
         @Part image: MultipartBody.Part,
         @HeaderMap headers: Map<String, String>
-    ): Response<String>
+    ): Response<ResponseBody>
 }
