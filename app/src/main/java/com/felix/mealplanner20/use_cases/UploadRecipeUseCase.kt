@@ -22,10 +22,17 @@ class UploadRecipeUseCase (
 
         val token = authRepository.getToken() ?: return PublishRecipeResult.LoginRequired
 
-        recipeRepository.uploadRecipeImage(context,recipeId, token,code)
-        recipeRepository.uploadDescriptionImages(context,recipeId, token,codes)
+        val recipeImageResult = recipeRepository.uploadRecipeImage(context, recipeId, token, code)
+        if (recipeImageResult != null && recipeImageResult.isFailure) {
+            return PublishRecipeResult.RecipeImageUploadFailed()
+        }
 
-        val response = recipeRepository.postRecipeToServer(recipeId, token,code,codes)
+        val descImagesResult = recipeRepository.uploadDescriptionImages(context, recipeId, token, codes)
+        if (descImagesResult != null && descImagesResult.isFailure) {
+            return PublishRecipeResult.DescriptionImagesUploadFailed()
+        }
+
+        val response = recipeRepository.postRecipeToServer(recipeId, token, code, codes)
 
         return response
     }
@@ -71,8 +78,15 @@ class UpdateRecipeUseCase(
             ?: return PublishRecipeResult.PostToServerFailed()
 
         // Nur neue Bilder hochladen (Replace)
-        recipeRepository.uploadRecipeImage(context, localRecipeId, token, recipeCode)
-        recipeRepository.uploadDescriptionImages(context, localRecipeId, token, changes.stepCodesArray)
+        val recipeImageResult = recipeRepository.uploadRecipeImage(context, localRecipeId, token, recipeCode)
+        if (recipeImageResult != null && recipeImageResult.isFailure) {
+            return PublishRecipeResult.RecipeImageUploadFailed()
+        }
+
+        val descImagesResult = recipeRepository.uploadDescriptionImages(context, localRecipeId, token, changes.stepCodesArray)
+        if (descImagesResult != null && descImagesResult.isFailure) {
+            return PublishRecipeResult.DescriptionImagesUploadFailed()
+        }
 
         // PUT analog zu POST
         return recipeRepository.putRecipeToServer(

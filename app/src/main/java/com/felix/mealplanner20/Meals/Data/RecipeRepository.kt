@@ -10,6 +10,7 @@ import com.felix.mealplanner20.Meals.Data.DTO.IngredientWithRecipeDTO
 import com.felix.mealplanner20.Meals.Data.DTO.IngredientWithoutRecipeIdDTO
 import com.felix.mealplanner20.Meals.Data.DTO.RecipeFullDTO
 import com.felix.mealplanner20.Meals.Data.helpers.Mealtype
+import com.felix.mealplanner20.Meals.Data.helpers.uriToScaledJpegBytes
 import com.felix.mealplanner20.Meals.Data.helpers.UnitOfMeasure
 import com.felix.mealplanner20.ViewModels.RecipeResponse
 import com.felix.mealplanner20.apiService.FullRecipeDTO
@@ -206,7 +207,6 @@ class RecipeRepository @Inject constructor(
         val body = createPostObjectFromRecipeId(recipeId)
         val imageHeader = buildImageHeader(recipeImageCode, descriptionStepImageCodes.map { it as String? }.toTypedArray())
         val headers = buildPublishHeaders(token, imageHeader)
-        Log.d("DEBUG", "headers: $headers")
 
         return executePublish("POST /recipes") {
             recipeApiService.postRecipe(body, headers)
@@ -224,7 +224,6 @@ class RecipeRepository @Inject constructor(
         val body = createPostObjectFromRecipeId(localRecipeId)
         val imageHeader = buildImageHeader(recipeImageCode, descriptionStepImageCodes)
         val headers = buildPublishHeaders(token, imageHeader, ifMatch)
-        Log.d("DEBUG", "headers: $headers")
 
         return executePublish("PUT /recipes/$remoteRecipeId") {
             recipeApiService.putRecipe(remoteRecipeId, body, headers)
@@ -285,7 +284,6 @@ class RecipeRepository @Inject constructor(
     ): PublishRecipeResult {
         return try {
             val response = call()
-            Log.d("PublishRecipe", "$actionLabel status=${response.code()} isSuccessful=${response.isSuccessful}")
             if (response.isSuccessful) {
                 val bodyStr = try { response.body()?.string() } catch (_: Exception) { null }
                 val publishResp = try {
@@ -326,8 +324,8 @@ class RecipeRepository @Inject constructor(
       return try{
           if (code.isBlank() || code == "-") return null
           getRecipeById(recipeId).first().let { recipe ->
-              recipe.imgUri?.let {uri->
-                  uriToByteArray(context,uri)?.let {bytes->
+              recipe.imgUri?.let { uri ->
+                  uriToScaledJpegBytes(context, uri, maxBytes = 900_000)?.let { bytes ->
                       updownload.uploadImage(bytes, token, code, BUCKET.RECIPE)
                   }
               }
@@ -340,7 +338,8 @@ class RecipeRepository @Inject constructor(
 
     suspend fun uploadDescriptionImages(context: Context, recipeId: Long, token: String,codes:Array<String?>): Result<String>? {
          try{
-             var result: Result<String>? = null
+             var anyFailed = false
+             var anyUploaded = false
              val steps = getRecipeDescriptionStepsByRecipeId(recipeId)
              steps.forEach { step ->
                  val idx = (step.stepNr - 1).coerceAtLeast(0)
@@ -350,14 +349,31 @@ class RecipeRepository @Inject constructor(
                  if (code.isBlank() || code == "-") return@forEach
 
                  val uriStr = step.imgUri ?: return@forEach
-                 uriToByteArray(context, uriStr.toUri())?.let { bytes ->
-                     result = updownload.uploadImage(bytes, token, code, BUCKET.DESCRIPTION)
+
+                 val bytes = uriToScaledJpegBytes(context, uriStr.toUri(), maxBytes = 900_000)
+                 if (bytes == null) {
+                     Log.e("UploadStepImage", "Step ${step.stepNr}: uriToByteArray returned null — file unreadable at URI=$uriStr")
+                     anyFailed = true
+                     return@forEach
+                 }
+
+                 anyUploaded = true
+                 val uploadResult = updownload.uploadImage(bytes, token, code, BUCKET.DESCRIPTION)
+                 if (uploadResult.isFailure) {
+                     Log.e("UploadStepImage", "Step ${step.stepNr}: upload failed — ${uploadResult.exceptionOrNull()?.message}")
+                     anyFailed = true
+                 } else {
+                     Log.d("UploadStepImage", "Step ${step.stepNr}: upload succeeded")
                  }
              }
-             return result
+             return when {
+                 anyFailed -> Result.failure(Exception("One or more description images failed to upload"))
+                 anyUploaded -> Result.success("OK")
+                 else -> null
+             }
         }catch (e:Exception){
-            Log.e("ERROR",e.stackTraceToString())
-            return null
+            Log.e("UploadStepImage", "uploadDescriptionImages exception: ${e.message}", e)
+            return Result.failure(e)
         }
     }
 

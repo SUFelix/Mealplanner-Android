@@ -68,6 +68,8 @@ import com.felix.mealplanner20.ui.theme.Slate200
 import com.felix.mealplanner20.ui.theme.Slate500
 import com.felix.mealplanner20.use_cases.DownloadRecipeResult
 import java.io.ByteArrayOutputStream
+import androidx.compose.ui.tooling.preview.Preview
+import com.felix.mealplanner20.Meals.Data.helpers.UnitOfMeasure
 import java.util.Locale
 
 @Composable
@@ -498,15 +500,45 @@ fun RemoteRecipeDescriptionStep(
                 )
             }
 
-            Spacer(modifier = Modifier.height(30.dp)) // offset ausgleichen
-
             Text(
                 text = stepText,
                 modifier = Modifier
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                     .fillMaxWidth(),
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 18.sp)
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 20.sp)
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewDescriptionBlock() {
+    val steps = listOf(
+        RecipeDescription(
+            recipeId = 1,
+            stepNr = 1,
+            text = "Schritt 1",
+            englishText = "Dice the onions finely and sauté in a little oil over medium heat until translucent.",
+            germanText = "Zwiebeln fein würfeln und in etwas Öl bei mittlerer Hitze glasig dünsten.",
+            imgUri = null
+        ),
+        RecipeDescription(
+            recipeId = 1,
+            stepNr = 2,
+            text = "Schritt 2",
+            englishText = "Add the tomatoes and simmer for 15 minutes.",
+            germanText = "Tomaten hinzufügen und 15 Minuten köcheln lassen.",
+            imgUri = null
+        ),
+        RecipeDescription(
+            recipeId = 1,
+            stepNr = 3,
+            text = "Schritt 3",
+            englishText = "Season to taste with salt, pepper, and fresh herbs.",
+            germanText = "Mit Salz, Pfeffer und frischen Kräutern abschmecken.",
+            imgUri = null
+        )
+    )
+    DescriptionBlock(steps = steps)
 }
