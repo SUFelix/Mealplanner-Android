@@ -39,5 +39,9 @@ class ShoppingListRepository(
     suspend fun clearShoppingList(){
         shoppingListDao.clearShoppingList()
     }
+
+    suspend fun updateCheckedState(id: Long, isChecked: Boolean) {
+        shoppingListDao.updateCheckedState(id, isChecked)
+    }
 }
 

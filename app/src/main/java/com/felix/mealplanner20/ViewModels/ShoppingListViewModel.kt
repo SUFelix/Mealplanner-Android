@@ -64,6 +64,12 @@ class ShoppingListViewModel @Inject constructor(
         }
     }
 
+    fun toggleItemChecked(id: Long, isChecked: Boolean) {
+        viewModelScope.launch {
+            shoppingListRepository.updateCheckedState(id, isChecked)
+        }
+    }
+
     fun clearShoppingList() {
         viewModelScope.launch {
             try {

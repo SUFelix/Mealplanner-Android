@@ -55,6 +55,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -103,7 +104,8 @@ fun ShoppingListView(
                 ){shoppingListItemWithIngredient->
                     NewShoppingListItem(
                         shoppingListItem = shoppingListItemWithIngredient,
-                        onDeleteClick = {shoppingListViewModel.deleteItemFromShoppingList(shoppingListItemWithIngredient.id) }
+                        onDeleteClick = { shoppingListViewModel.deleteItemFromShoppingList(shoppingListItemWithIngredient.id) },
+                        onToggleChecked = { checked -> shoppingListViewModel.toggleItemChecked(shoppingListItemWithIngredient.id, checked) }
                     )
                 }
                 item {
@@ -139,7 +141,8 @@ fun ShoppingListView(
 @Composable
 fun NewShoppingListItem(
     shoppingListItem: ShoppingListItemWithIngredient,
-    onDeleteClick: ()->Unit = {}
+    onDeleteClick: () -> Unit = {},
+    onToggleChecked: (Boolean) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -175,17 +178,27 @@ fun NewShoppingListItem(
                 val isGerman = Locale.getDefault().language == "de"
 
                 Text(
-                    text = if (isGerman)shoppingListItem.ingredient.germanName else shoppingListItem.ingredient.englishName?:shoppingListItem.ingredient.germanName,
+                    text = if (isGerman) shoppingListItem.ingredient.germanName else shoppingListItem.ingredient.englishName ?: shoppingListItem.ingredient.germanName,
                     style = MaterialTheme.typography.titleMedium,
-                    color = Slate500
+                    color = Slate500.copy(alpha = if (shoppingListItem.isChecked) 0.4f else 1f),
+                    textDecoration = if (shoppingListItem.isChecked) TextDecoration.LineThrough else TextDecoration.None
                 )
             }
-            Text(
-                text = "${shoppingListItem.quantity.toInt()} ${shoppingListItem.unitOfMeasure.toUOMshoppingListshortcut(
-                    LocalContext.current)}",
-                style = MaterialTheme.typography.titleLarge,
-                color = Slate950
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "${shoppingListItem.quantity.toInt()} ${shoppingListItem.unitOfMeasure.toUOMshoppingListshortcut(LocalContext.current)}",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Slate950.copy(alpha = if (shoppingListItem.isChecked) 0.4f else 1f)
+                )
+                Checkbox(
+                    checked = shoppingListItem.isChecked,
+                    onCheckedChange = onToggleChecked,
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = Lime600,
+                        uncheckedColor = Slate500
+                    )
+                )
+            }
         }
     }
 }

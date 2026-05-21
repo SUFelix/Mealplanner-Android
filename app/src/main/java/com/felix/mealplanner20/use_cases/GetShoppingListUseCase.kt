@@ -34,6 +34,7 @@ class GetShoppingListUseCase @Inject constructor(
                                 ingredientId = shoppingListItem.ingredientId,
                                 quantity = shoppingListItem.quantity,
                                 unitOfMeasure = shoppingListItem.unitOfMeasure,
+                                isChecked = shoppingListItem.isChecked,
                                 ingredient = ingredient
                             )
                         } else {
@@ -53,6 +54,7 @@ data class ShoppingListItemWithIngredient(
     val ingredientId: Long,
     val quantity: Float,
     val unitOfMeasure: UnitOfMeasure,
+    val isChecked: Boolean,
     val ingredient: Ingredient
 )
 

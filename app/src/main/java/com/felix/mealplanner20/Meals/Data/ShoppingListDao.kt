@@ -21,4 +21,7 @@ interface ShoppingListDao {
 
     @Query("DELETE FROM shopping_list_table")
     suspend fun clearShoppingList()
+
+    @Query("UPDATE shopping_list_table SET isChecked = :isChecked WHERE id = :id")
+    suspend fun updateCheckedState(id: Long, isChecked: Boolean)
 }
