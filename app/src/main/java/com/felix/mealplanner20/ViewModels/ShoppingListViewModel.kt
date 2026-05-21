@@ -44,7 +44,7 @@ class ShoppingListViewModel @Inject constructor(
     }
 
     fun deleteItemFromShoppingList(ingredientId: Long) {
-        _shoppingListItems.value.find{ingredientId == ingredientId}?.let {
+        _shoppingListItems.value.find { it.id == ingredientId }?.let {
             _shoppingListItems.value -= it
         }
         viewModelScope.launch {
