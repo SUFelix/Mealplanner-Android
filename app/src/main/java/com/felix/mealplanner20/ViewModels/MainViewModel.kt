@@ -74,6 +74,17 @@ class MainViewModel @Inject constructor(
     private val _changesMade = MutableStateFlow<Boolean>(false)
     val changesMade: StateFlow<Boolean> = _changesMade
 
+    private val _isEditingRecipe = MutableStateFlow(false)
+    val isEditingRecipe: StateFlow<Boolean> = _isEditingRecipe
+
+    fun setRecipeEditMode(isEditing: Boolean) { _isEditingRecipe.value = isEditing }
+    fun toggleRecipeEditMode() { _isEditingRecipe.value = !_isEditingRecipe.value }
+
+    private val _isDirtyRecipe = MutableStateFlow(false)
+    val isDirtyRecipe: StateFlow<Boolean> = _isDirtyRecipe
+
+    fun setRecipeDirty(dirty: Boolean) { _isDirtyRecipe.value = dirty }
+
     fun cleanUnusedRecipeImages(context: Context){
         viewModelScope.launch {
             cleanUnusedRecipeImagesUseCase.invoke(context)

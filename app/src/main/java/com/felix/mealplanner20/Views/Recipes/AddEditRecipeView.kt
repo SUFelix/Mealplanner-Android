@@ -90,6 +90,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -148,6 +149,7 @@ fun AddEditRecipeView(
 
 
     val allowedUnitsMap by addEditRecipeViewModel.allowedUnitsForIngredients.collectAsState()
+    val isEditing by mainViewModel.isEditingRecipe.collectAsState()
 
     val publishRequirementHasIngredient by addEditRecipeViewModel.publishRequirementHasIngredient.collectAsState()
     val publishRequirementTypeSelected by addEditRecipeViewModel.publishRequirementTypeSelected.collectAsState()
@@ -161,8 +163,10 @@ fun AddEditRecipeView(
     val isApplyingWizard by addEditRecipeViewModel.isApplyingWizard.collectAsState()
     val wizardStepsAppliedCount by addEditRecipeViewModel.wizardStepsAppliedCount.collectAsState()
 
-    BackHandler(enabled = true) {
-        if(changesMade) {
+    LaunchedEffect(isDirty) { mainViewModel.setRecipeDirty(isDirty) }
+
+    BackHandler(enabled = isEditing || isDirty) {
+        if(isDirty) {
             mainViewModel.setShowExitWithoutSaveAlertDialog(true)
         }
         else{
@@ -298,6 +302,48 @@ fun AddEditRecipeView(
     }
     else{
     mainViewModel.setCurrentTopAppBarTitle(addEditRecipeViewModel.recipeName.value)
+    if (mainViewModel.showExitWithoutSaveAlertDialog.value) {
+        CustomAlertDialog(
+            title = stringResource(R.string.confirm_exit_without_saving),
+            text  = stringResource(R.string.do_you_really_want_to_go_back_your_changes_will_not_be_saved),
+            onConfirm = {
+                navController.navigateUp()
+                mainViewModel.setShowExitWithoutSaveAlertDialog(false)
+            },
+            onDismiss = { mainViewModel.setShowExitWithoutSaveAlertDialog(false) }
+        )
+    }
+    if (!isEditing) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                BigImageWithBackArrow(
+                    imgUri = addEditRecipeViewModel.imgUri.value,
+                    showBackArrow = false
+                )
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                        text = addEditRecipeViewModel.recipeName.value,
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 32.sp, fontWeight = FontWeight.Normal)
+                    )
+                }
+                CookModeStyledIngredientsBlock(
+                    recipeQuantity = addEditRecipeViewModel.servings.value,
+                    recipeViewModel = addEditRecipeViewModel
+                )
+                CookModeDescriptionBlock(addEditRecipeViewModel)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+    } else {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -308,18 +354,6 @@ fun AddEditRecipeView(
         Column( modifier = Modifier
             .background(Slate200)
         ){
-            if(mainViewModel.showExitWithoutSaveAlertDialog.value){
-                CustomAlertDialog(
-                    title = stringResource(R.string.confirm_exit_without_saving),
-                    text  = stringResource(R.string.do_you_really_want_to_go_back_your_changes_will_not_be_saved),
-                    onConfirm = {
-                        navController.navigateUp()
-                        mainViewModel.setShowExitWithoutSaveAlertDialog(false)
-                    },
-                    onDismiss = { mainViewModel.setShowExitWithoutSaveAlertDialog(false) }
-                )
-            }
-
             if (unmatchedWizardIngredients.isNotEmpty()) {
                 UnmatchedWizardIngredientsDialog(
                     items = unmatchedWizardIngredients,
@@ -506,6 +540,7 @@ fun AddEditRecipeView(
                 }
             }
         }
+    }
     }
 }
 }
