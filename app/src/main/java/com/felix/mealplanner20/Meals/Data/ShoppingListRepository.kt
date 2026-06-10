@@ -28,6 +28,10 @@ class ShoppingListRepository(
         shoppingListDao.addShoppingListItem(item)
     }
 
+    suspend fun addCustomItemToShoppingList(name: String) {
+        shoppingListDao.addShoppingListItem(ShoppingListItem(customName = name))
+    }
+
     suspend fun deleteOneItemFromShoppingListUseCase(ingredientId:Long){
         shoppingListDao.deleteShoppingListItem(ingredientId)
     }

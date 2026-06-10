@@ -37,6 +37,7 @@ import com.felix.mealplanner20.use_cases.CalculateCaloriesUseCase
 import com.felix.mealplanner20.use_cases.CalculateNutritionQualityUseCase
 import com.felix.mealplanner20.use_cases.CalculateTotalCaloriesForIngredientWithRecipeListUseCase
 import com.felix.mealplanner20.use_cases.CleanUnusedRecipeImagesUseCase
+import com.felix.mealplanner20.use_cases.AddCustomShoppingListItemUseCase
 import com.felix.mealplanner20.use_cases.ClearShoppingListUseCase
 import com.felix.mealplanner20.use_cases.CreateShoppingListUseCase
 import com.felix.mealplanner20.use_cases.DeleteIngredientFromRecipeUseCase
@@ -120,6 +121,7 @@ object NavGraph {
             .addMigrations(MIGRATION_37_38)
             .addMigrations(MIGRATION_38_39)
             .addMigrations(MIGRATION_39_40)
+            .addMigrations(MIGRATION_40_41)
             .build()
     }
     @Provides
@@ -441,6 +443,7 @@ object NavGraph {
             getShoppingListUseCase = GetShoppingListUseCase(shoppingListRepository,ingredientRepository),
             clearShoppingListUseCase = ClearShoppingListUseCase(shoppingListRepository),
             deleteOneItemFromShoppingListUseCase = DeleteOneItemFromShoppingListUseCase(shoppingListRepository),
+            addCustomShoppingListItemUseCase = AddCustomShoppingListItemUseCase(shoppingListRepository),
             areAllIngredientsVeganUseCase = AreAllIngredientsVeganUseCase(ingredientRepository),
             areAllIngredientsVegetarianUseCase = AreAllIngredientsVegetarianUseCase(ingredientRepository),
             calcCPFratioUseCase= CalculateCPFratioUseCase(ingredientRepository),
@@ -801,6 +804,12 @@ FOREIGN KEY (recipe_id) REFERENCES recipe_table(id) ON DELETE CASCADE
     val MIGRATION_39_40 = object : Migration(39, 40) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE shopping_list_table ADD COLUMN isChecked INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
+    val MIGRATION_40_41 = object : Migration(40, 41) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE shopping_list_table ADD COLUMN customName TEXT")
         }
     }
 
