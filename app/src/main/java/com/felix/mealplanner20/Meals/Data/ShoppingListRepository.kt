@@ -28,6 +28,10 @@ class ShoppingListRepository(
         shoppingListDao.addShoppingListItem(item)
     }
 
+    suspend fun addCustomItemToShoppingList(name: String) {
+        shoppingListDao.addShoppingListItem(ShoppingListItem(customName = name))
+    }
+
     suspend fun deleteOneItemFromShoppingListUseCase(ingredientId:Long){
         shoppingListDao.deleteShoppingListItem(ingredientId)
     }
@@ -38,6 +42,10 @@ class ShoppingListRepository(
 
     suspend fun clearShoppingList(){
         shoppingListDao.clearShoppingList()
+    }
+
+    suspend fun updateCheckedState(id: Long, isChecked: Boolean) {
+        shoppingListDao.updateCheckedState(id, isChecked)
     }
 }
 

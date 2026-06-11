@@ -1,0 +1,1501 @@
+ ▐▛███▜▌   Claude Code v2.1.145
+▝▜█████▛▘  Sonnet 4.6 · API Usage Billing
+  ▘▘ ▝▝    ~\StudioProjects\MealPlanner
+
+❯ /clear                                                                        
+  ⎿  (no content)
+
+❯ /plan Currently when we are in                                                
+@app/src/main/java/com/felix/mealplanner20/Views/Recipes/MyOwnRecipesView.kt    
+and we click                                                                    
+  ⎿  Enabled plan mode
+
+● I can see you started a plan description but it looks like it was cut off. Let
+   me check the memory and the file you mentioned while you complete your
+  thought.
+
+  Read 1 file, recalled 1 memory (ctrl+o to expand)
+
+● Your message was cut off. Based on the branch name
+  feature/manually_enable_recipe_edit_mode I have a hypothesis, but let me
+  confirm what you're trying to do.
+
+● User answered Claude's questions:
+  ⎿  · Your plan description was cut off at "...and we click". What behavior are
+      you trying to change or add? → View-only mode first, edit requires 
+     explicit action
+
+● Now I'll explore the codebase to understand the current recipe detail/edit
+  screen before designing the approach.
+
+● 2 Explore agents finished (ctrl+o to expand)
+   ├ Explore AddUpdateRecipeScreen and related ViewModel · 25 tool uses · 70.3k tokens
+   │ ⎿  Done
+   └ Check git branch for existing edit mode work · 10 tool uses · 23.3k tokens
+     ⎿  Done
+
+● Good - now let me read the ViewModel and nav graph to understand the isEditing
+   parameter that already exists.
+
+  Searched for 1 pattern, read 2 files (ctrl+o to expand)
+
+● Let me check the nav graph location quickly.
+
+  Searched for 2 patterns, read 1 file (ctrl+o to expand)
+
+● Now I have enough context. Let me write the plan.
+
+  Read 1 file (ctrl+o to expand)
+
+● I now have everything I need. Writing the plan file.
+
+● Updated plan
+  ⎿  /plan to preview
+  ⎿  User rejected Claude's plan:
+     ╭─────────────────────────────────────────────────────────────────────────╮
+     │ Plan: Manually Enable Recipe Edit Mode                                  │
+     │                                                                         │
+     │ Context                                                                 │
+     │                                                                         │
+     │ Tapping a recipe card in MyOwnRecipesView currently navigates to        │
+     │ AddEditRecipeView in full edit mode immediately. The goal is to show a  │
+     │ read-only view first, with an explicit "Edit" FAB that the user must    │
+     │ tap to enter edit mode. This preserves intentional editing while making │
+     │  the view safe to browse casually.                                      │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Critical Files                                                          │
+     │                                                                         │
+     │ ┌──────────────────────────────────────┬─────────────────────────────── │
+     │ ────┐                                                                   │
+     │ │                 File                 │               Role             │
+     │     │                                                                   │
+     │ ├──────────────────────────────────────┼─────────────────────────────── │
+     │ ────┤                                                                   │
+     │ │ ViewModels/AddEditRecipeViewModel.kt │ Add isEditing state +          │
+     │     │                                                                   │
+     │ │                                      │ enableEditing()                │
+     │     │                                                                   │
+     │ ├──────────────────────────────────────┼─────────────────────────────── │
+     │ ────┤                                                                   │
+     │ │ Views/Recipes/AddEditRecipeView.kt   │ Branch on isEditing at top     │
+     │ level  │                                                                │
+     │ │                                      │ (line 136+)                    │
+     │     │                                                                   │
+     │ ├──────────────────────────────────────┼─────────────────────────────── │
+     │ ────┤                                                                   │
+     │ │                                      │ Reuse composables:             │
+     │     │                                                                   │
+     │ │ Views/Recipes/RecipeViewOnlyView.kt  │ BigImageWithBackArrow,         │
+     │     │                                                                   │
+     │ │                                      │                                │
+     │ CookModeStyledIngredientsBlock,   │                                     │
+     │ │                                      │ CookModeDescriptionBlock       │
+     │     │                                                                   │
+     │ └──────────────────────────────────────┴─────────────────────────────── │
+     │ ────┘                                                                   │
+     │                                                                         │
+     │ No changes needed in: Navigation.kt, Screen.kt, MyOwnRecipesView.kt     │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Implementation Steps                                                    │
+     │                                                                         │
+     │ 1 — AddEditRecipeViewModel.kt: Add isEditing state                      │
+     │                                                                         │
+     │ Add below the existing isDirty declarations (~line 63):                 │
+     │ private val _isEditing = MutableStateFlow(true)                         │
+     │ val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()            │
+     │                                                                         │
+     │ fun enableEditing() { _isEditing.value = true }                         │
+     │                                                                         │
+     │ In loadRecipe() (~line 448), inside the if (!checkForHasLoaded or       │
+     │ !hasLoaded) guard, set the mode before the coroutine launch so it's     │
+     │ available synchronously on first render:                                │
+     │ fun loadRecipe(recipeId: Long, checkForHasLoaded: Boolean) {            │
+     │     if (!checkForHasLoaded or !hasLoaded) {                             │
+     │         _isEditing.value = (recipeId == 0L)   // new recipe → edit,     │
+     │ existing → view                                                         │
+     │         viewModelScope.launch { ... }          // existing body         │
+     │ unchanged                                                               │
+     │         hasLoaded = true                                                │
+     │     }                                                                   │
+     │ }                                                                       │
+     │                                                                         │
+     │ This means:                                                             │
+     │ - recipeId == 0L (new recipe via the + FAB) → edit mode immediately ✓   │
+     │ - recipeId > 0L (existing recipe) → view-only mode ✓                    │
+     │ - Recomposition with hasLoaded=true → guard skipped, isEditing          │
+     │ preserved ✓                                                             │
+     │                                                                         │
+     │ ---                                                                     │
+     │ 2 — AddEditRecipeView.kt: Branch on isEditing                           │
+     │                                                                         │
+     │ Collect isEditing alongside the existing state at the top of            │
+     │ AddEditRecipeView (~line 146):                                          │
+     │ val isEditing by addEditRecipeViewModel.isEditing.collectAsState()      │
+     │                                                                         │
+     │ Wrap the entire body of the composable in a conditional. Place the      │
+     │ view-only branch before the existing edit UI:                           │
+     │                                                                         │
+     │ if (!isEditing) {                                                       │
+     │     // --- VIEW-ONLY MODE ---                                           │
+     │     Box(Modifier.fillMaxSize()) {                                       │
+     │         Column(                                                         │
+     │             Modifier                                                    │
+     │                 .fillMaxSize()                                          │
+     │                 .background(Slate200)                                   │
+     │                 .verticalScroll(rememberScrollState())                  │
+     │         ) {                                                             │
+     │             BigImageWithBackArrow(                                      │
+     │                 imgUri = addEditRecipeViewModel.imgUri.value,           │
+     │                 onArrowClick = { navController.popBackStack() }         │
+     │             )                                                           │
+     │             Column(                                                     │
+     │                 Modifier.fillMaxWidth(),                                │
+     │                 horizontalAlignment = Alignment.CenterHorizontally      │
+     │             ) {                                                         │
+     │                 Text(                                                   │
+     │                     text = addEditRecipeViewModel.recipeName.value,     │
+     │                     modifier = Modifier.padding(start = 16.dp, end =    │
+     │ 16.dp, top = 16.dp, bottom = 8.dp),                                     │
+     │                     style =                                             │
+     │ MaterialTheme.typography.labelMedium.copy(fontSize = 32.sp, fontWeight  │
+     │ = FontWeight.Normal)                                                    │
+     │                 )                                                       │
+     │                 GreenDotsRow(5)                                         │
+     │             }                                                           │
+     │             CookModeStyledIngredientsBlock(                             │
+     │                 recipeQuantity = addEditRecipeViewModel.servings.value, │
+     │                 recipeViewModel = addEditRecipeViewModel                │
+     │             )                                                           │
+     │             CookModeDescriptionBlock(addEditRecipeViewModel)            │
+     │             Spacer(Modifier.height(80.dp))   // space for FAB           │
+     │         }                                                               │
+     │         FloatingActionButton(                                           │
+     │             onClick = { addEditRecipeViewModel.enableEditing() },       │
+     │             modifier = Modifier                                         │
+     │                 .align(Alignment.BottomEnd)                             │
+     │                 .padding(16.dp),                                        │
+     │             shape = CircleShape,                                        │
+     │             containerColor = Lime600,                                   │
+     │             contentColor = Color.White                                  │
+     │         ) {                                                             │
+     │             Icon(Icons.Default.Edit, contentDescription = "Edit")       │
+     │         }                                                               │
+     │     }                                                                   │
+     │ } else {                                                                │
+     │     // --- EDIT MODE (existing body, unchanged) ---                     │
+     │     ...                                                                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ ▎ Icons.Default.Edit may need importing                                 │
+     │ ▎ (androidx.compose.material.icons.filled.Edit). If not available, use  │
+     │ ▎ a pencil drawable or Icons.Filled.Create.                             │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Behaviour Summary                                                       │
+     │                                                                         │
+     │ ┌────────────────────┬──────────┬───────────────┬────────────────────── │
+     │ ───┐                                                                    │
+     │ │    Entry point     │ recipeId │ isEditing on  │       User action     │
+     │    │                                                                    │
+     │ │                    │          │     open      │                       │
+     │    │                                                                    │
+     │ ├────────────────────┼──────────┼───────────────┼────────────────────── │
+     │ ───┤                                                                    │
+     │ │ Tap existing       │ > 0      │ false (view   │ Tap Edit FAB →        │
+     │    │                                                                    │
+     │ │ recipe card        │          │ mode)         │ isEditing = true      │
+     │    │                                                                    │
+     │ ├────────────────────┼──────────┼───────────────┼────────────────────── │
+     │ ───┤                                                                    │
+     │ │ Tap + FAB (new     │ 0        │ true (edit    │ — directly editable   │
+     │    │                                                                    │
+     │ │ recipe)            │          │ mode)         │                       │
+     │    │                                                                    │
+     │ ├────────────────────┼──────────┼───────────────┼────────────────────── │
+     │ ───┤                                                                    │
+     │ │ Navigate back from │ —        │ —             │ Pops to               │
+     │    │                                                                    │
+     │ │  view mode         │          │               │ MyOwnRecipesView      │
+     │    │                                                                    │
+     │ └────────────────────┴──────────┴───────────────┴────────────────────── │
+     │ ───┘                                                                    │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Verification                                                            │
+     │                                                                         │
+     │ 1. Build and run the app (./gradlew installDebug)                       │
+     │ 2. Navigate to "My Recipes" tab                                         │
+     │ 3. Tap an existing recipe → should open in read-only view with an Edit  │
+     │ FAB                                                                     │
+     │ 4. Tap the Edit FAB → should switch to full edit mode (all fields       │
+     │ editable, save/delete buttons visible)                                  │
+     │ 5. Tap the + FAB to create a new recipe → should open directly in edit  │
+     │ mode                                                                    │
+     │ 6. In view mode, tap the back arrow → should return to the recipe list  │
+     ╰─────────────────────────────────────────────────────────────────────────╯
+
+❯ i will do the verification myself, skip it. code the rest as planed           
+
+● Let me read the exact lines I need to edit in both files.
+  Searched for 3 patterns, read 2 files (ctrl+o to expand)
+
+● Good. Now I'll make all the changes. Starting with the ViewModel:
+
+● Update(app\src\main\java\com\felix\mealplanner20\ViewModels\AddEditRecipeViewM
+        odel.kt)
+  ⎿  Added 5 lines
+      63      private var _isDirty = mutableStateOf(false)
+      64      val isDirty:State<Boolean> = _isDirty
+      65  
+      66 +    private val _isEditing = MutableStateFlow(true)            
+      67 +    val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow(
+         +)                                                              
+      68 +                                                               
+      69 +    fun enableEditing() { _isEditing.value = true }            
+      70 +                                                               
+      71      var recipeIngredients by mutableStateOf<List<IngredientWith
+          Recipe>>(emptyList())
+      72  
+      73      private val recipeIngredientsFlow: Flow<List<IngredientWith
+          Recipe>> =
+
+● Now set _isEditing inside loadRecipe:
+
+● Update(app\src\main\java\com\felix\mealplanner20\ViewModels\AddEditRecipeViewM
+        odel.kt)
+  ⎿  Added 3 lines, removed 1 line
+      451          UnitOfMeasure.CLOVE -> 1f
+      452      }
+      453      fun loadRecipe(recipeId: Long,checkForHasLoaded:Boolean) {
+      454 -        if(!checkForHasLoaded or !hasLoaded){viewModelScope.la
+          -unch {                                                        
+      454 +        if(!checkForHasLoaded or !hasLoaded){                 
+      455 +        _isEditing.value = (recipeId == 0L)                   
+      456 +        viewModelScope.launch {                               
+      457              try {
+      458                  recipeUseCase.getRecipeByIdUseCase(recipeId)?.
+           let { recipe ->
+      459                      val myRecipe = recipe.first()
+
+● Now the view changes. First add the missing imports:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line
+      48  import androidx.compose.material.icons.Icons
+      49  import androidx.compose.material.icons.filled.Add
+      50  import androidx.compose.material.icons.filled.ArrowDropDown
+      51 +import androidx.compose.material.icons.filled.Edit             
+      52  import androidx.compose.material.icons.filled.CheckCircle
+      53  import androidx.compose.material.icons.filled.Delete
+      54  import androidx.compose.material.icons.filled.Place
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line
+      91  import androidx.compose.ui.res.stringResource
+      92  import androidx.compose.ui.text.input.ImeAction
+      93  import androidx.compose.ui.text.input.KeyboardType
+      94 +import androidx.compose.ui.text.font.FontWeight                
+      95  import androidx.compose.ui.text.style.TextAlign
+      96  import androidx.compose.ui.text.style.TextOverflow
+      97  import androidx.compose.ui.unit.Dp
+
+● Now collect isEditing in the composable and fix the BackHandler:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line
+      259  
+      260  
+      261  
+      262 +    val isEditing by addEditRecipeViewModel.isEditing.collectA
+          +sState()                                                      
+      263      val isLoading by addEditRecipeViewModel.isLoading.collectA
+           sState()
+      264      val isPublishing by addEditRecipeViewModel.isPublishing.co
+           llectAsState()
+      265      if (isLoading) {
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line, removed 1 line
+      163      val isApplyingWizard by addEditRecipeViewModel.isApplyingW
+           izard.collectAsState()
+      164      val wizardStepsAppliedCount by addEditRecipeViewModel.wiza
+           rdStepsAppliedCount.collectAsState()
+      165  
+      166 -    BackHandler(enabled = true) {                             
+      166 +    BackHandler(enabled = isEditing) {                        
+      167          if(changesMade) {
+      168              mainViewModel.setShowExitWithoutSaveAlertDialog(tr
+           ue)
+      169          }
+
+● Now insert the view-only branch inside the else block. I'll replace the start
+  of the else to wrap the edit UI:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 45 lines
+      301      }
+      302      else{
+      303      mainViewModel.setCurrentTopAppBarTitle(addEditRecipeViewMo
+           del.recipeName.value)
+      304 +    if (!isEditing) {                                         
+      305 +        Box(modifier = Modifier.fillMaxSize()) {              
+      306 +            Column(                                           
+      307 +                modifier = Modifier                           
+      308 +                    .fillMaxSize()                            
+      309 +                    .background(Slate200)                     
+      310 +                    .verticalScroll(rememberScrollState())    
+      311 +            ) {                                               
+      312 +                BigImageWithBackArrow(                        
+      313 +                    imgUri = addEditRecipeViewModel.imgUri.val
+          +ue,                                                           
+      314 +                    onArrowClick = { navController.navigateUp(
+          +) }                                                           
+      315 +                )                                             
+      316 +                Column(                                       
+      317 +                    modifier = Modifier                       
+      318 +                        .fillMaxWidth()                       
+      319 +                        .background(Slate200),                
+      320 +                    horizontalAlignment = Alignment.CenterHori
+          +zontally                                                      
+      321 +                ) {                                           
+      322 +                    Text(                                     
+      323 +                        modifier = Modifier.padding(start = 16
+          +.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),                
+      324 +                        text = addEditRecipeViewModel.recipeNa
+          +me.value,                                                     
+      325 +                        style = MaterialTheme.typography.label
+          +Medium.copy(fontSize = 32.sp, fontWeight = FontWeight.Normal) 
+      326 +                    )                                         
+      327 +                    GreenDotsRow(5)                           
+      328 +                }                                             
+      329 +                CookModeStyledIngredientsBlock(               
+      330 +                    recipeQuantity = addEditRecipeViewModel.se
+          +rvings.value,                                                 
+      331 +                    recipeViewModel = addEditRecipeViewModel  
+      332 +                )                                             
+      333 +                CookModeDescriptionBlock(addEditRecipeViewMode
+          +l)                                                            
+      334 +                Spacer(modifier = Modifier.height(80.dp))     
+      335 +            }                                                 
+      336 +            FloatingActionButton(                             
+      337 +                onClick = { addEditRecipeViewModel.enableEditi
+          +ng() },                                                       
+      338 +                modifier = Modifier                           
+      339 +                    .align(Alignment.BottomEnd)               
+      340 +                    .padding(16.dp),                          
+      341 +                shape = CircleShape,                          
+      342 +                containerColor = Lime600,                     
+      343 +                contentColor = Color.White                    
+      344 +            ) {                                               
+      345 +                Icon(Icons.Default.Edit, contentDescription = 
+          +"Edit")                                                       
+      346 +            }                                                 
+      347 +        }                                                     
+      348 +    } else {                                                  
+      349      Box(
+      350          modifier = Modifier
+      351              .fillMaxSize()
+
+● Now I need to close the new else block. Let me find the closing braces of the
+  original else block:
+
+  Read 1 file (ctrl+o to expand)
+
+● Let me check the actual current state of the file ending to add the closing
+  brace correctly:
+
+  Read 1 file (ctrl+o to expand)
+
+● Bash(sed -n '548,565p' "C:\Users\felix\StudioProjects\MealPlanner\app\src\main
+      \java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeView.kt" | cat -A
+       | head -20)
+  ⎿                              },$
+                                 modifier = Modifier$
+                                     .weight(1f)$
+     … +15 lines (ctrl+o to expand)
+
+● I need to add a closing } for the inner else block. The edit-mode Box closes
+  at 4 spaces, but I need another     } to close the } else { itself:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)  ⎿  Added 1 line
+      555              }
+      556          }
+      557      }
+      558 +    }                                                         
+      559  }
+      560  }
+      561  
+
+● Now let's verify the build compiles:
+
+● Bash(cd "C:\Users\felix\StudioProjects\MealPlanner" && ./gradlew
+      :app:compileDebugKotlin 2>&1 | tail -40)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ fix the is editing variable in                                                
+  @app/src/main/java/com/felix/mealplanner20/Views/Recipes/AddEditRecipeView.kt 
+  ⎿  Read app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeView.kt (1852 lines)
+
+● The isEditing variable is declared twice — once at line 153 and again at line
+  263. Removing the duplicate:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Removed 1 line
+      260  
+      261  
+      262  
+      263 -    val isEditing by addEditRecipeViewModel.isEditing.collectA
+          -sState()                                                      
+      263      val isLoading by addEditRecipeViewModel.isLoading.collectA
+           sState()
+      264      val isPublishing by addEditRecipeViewModel.isPublishing.co
+           llectAsState()
+      265      if (isLoading) {
+
+● The duplicate val isEditing at the second declaration site is removed. The one
+   at line 153 (inside the allowedUnitsMap block) remains as the single source.
+
+✻ Baked for 10s
+
+❯ Move the edditing button to the top appbar (probably within mainview) and     
+  make it both way, so that the editing mode can be left again with the same    
+  button                                                                        
+
+● Let me look at how the top app bar is structured in MainView.
+
+  Read 1 file (ctrl+o to expand)
+
+● Now I have a clear picture. The challenge is that AddUpdateRecipeTopAppBar
+  lives in MainView and has no access to AddEditRecipeViewModel. The clean
+  solution is to bridge through MainViewModel.
+
+  Updating the plan file and exiting plan mode:
+
+● Updated plan
+  ⎿  /plan to preview
+
+● User approved Claude's plan
+  ⎿  Plan saved to: ~\.claude\plans\dynamic-brewing-fountain.md · /plan to edit
+     Plan: Edit Mode Toggle in Top App Bar
+
+     Context
+
+     The edit/view toggle for "my own" recipes needs to live in the
+     AddUpdateRecipeTopAppBar (in MainView.kt), not as a FAB inside the recipe
+     screen. The button should be bidirectional: tap once to enter edit mode,
+     tap again to return to view mode.
+
+     The complication: AddUpdateRecipeTopAppBar is rendered in MainView outside
+     the nav graph, so it has no direct access to AddEditRecipeViewModel.
+     Solution: bridge through MainViewModel, which is already passed to the top
+     bar.
+
+     AddEditRecipeViewModel.isEditing (added in a prior step) will be removed
+     and replaced by MainViewModel.isEditingRecipe as the single source of
+     truth.
+
+     ---
+     Critical Files
+
+     ┌───────────────────────────────────────┬─────────────────────────────────┐
+     │                 File                  │             Change              │
+     ├───────────────────────────────────────┼─────────────────────────────────┤
+     │                                       │ Add isEditingRecipe state +     │
+     │ ViewModels/MainViewModel.kt           │ setRecipeEditMode() +           │
+     │                                       │ toggleRecipeEditMode()          │
+     ├───────────────────────────────────────┼─────────────────────────────────┤
+     │ Views/MainView.kt →                   │ Add edit toggle IconButton in   │
+     │ AddUpdateRecipeTopAppBar              │ actions; receive isEditing +    │
+     │                                       │ onToggleEdit params             │
+     ├───────────────────────────────────────┼─────────────────────────────────┤
+     │ Navigation.kt                         │ Add LaunchedEffect(id) to set   │
+     │                                       │ recipe edit mode on load        │
+     ├───────────────────────────────────────┼─────────────────────────────────┤
+     │                                       │ Read isEditing from             │
+     │ Views/Recipes/AddEditRecipeView.kt    │ mainViewModel instead of        │
+     │                                       │ addEditRecipeViewModel; remove  │
+     │                                       │ the Edit FAB                    │
+     ├───────────────────────────────────────┼─────────────────────────────────┤
+     │                                       │ Remove _isEditing, isEditing,   │
+     │ ViewModels/AddEditRecipeViewModel.kt  │ enableEditing() and the         │
+     │                                       │ assignment in loadRecipe        │
+     └───────────────────────────────────────┴─────────────────────────────────┘
+
+     ---
+     Implementation Steps
+
+     1 — MainViewModel.kt: Add edit mode state
+
+     private val _isEditingRecipe = MutableStateFlow(false)
+     val isEditingRecipe: StateFlow<Boolean> = _isEditingRecipe.asStateFlow()
+
+     fun setRecipeEditMode(isEditing: Boolean) { _isEditingRecipe.value =
+     isEditing }
+     fun toggleRecipeEditMode() { _isEditingRecipe.value =
+     !_isEditingRecipe.value }
+
+     2 — Navigation.kt: Set mode on recipe load
+
+     Inside the composable(route = Screen.AddUpdateRecipeScreen...) block, after
+      sharedRecipeViewModel.loadRecipe(id, true), add:
+
+     LaunchedEffect(id) {
+         mainViewModel.setRecipeEditMode(id == 0L)
+     }
+
+     LaunchedEffect(id) fires once per navigation to this screen, so
+     recompositions won't reset the user's current mode.
+
+     3 — MainView.kt: Update AddUpdateRecipeTopAppBar
+
+     Add two parameters:
+     fun AddUpdateRecipeTopAppBar(
+         navController: NavHostController,
+         title: String,
+         mainViewModel: MainViewModel,
+         isEditingRecipe: Boolean,          // new
+         onToggleEditMode: () -> Unit        // new
+     )
+
+     Add an IconButton in actions:
+     actions = {
+         IconButton(onClick = onToggleEditMode) {
+             Icon(
+                 imageVector = Icons.Default.Edit,
+                 contentDescription = if (isEditingRecipe) "Exit edit mode" else
+      "Edit recipe",
+                 tint = if (isEditingRecipe) Lime600 else Slate950
+             )
+         }
+     }
+
+     Update the call site in MainView (line ~197):
+     Screen.AddUpdateRecipeScreen(context).route -> AddUpdateRecipeTopAppBar(
+         navController = navController,
+         title = mainViewModel.currentTopAppBarTitle.value,
+         mainViewModel = mainViewModel,
+         isEditingRecipe = mainViewModel.isEditingRecipe.collectAsState().value,
+         onToggleEditMode = { mainViewModel.toggleRecipeEditMode() }
+     )
+
+     4 — AddEditRecipeView.kt: Read isEditing from mainViewModel
+
+     Replace:
+     val isEditing by addEditRecipeViewModel.isEditing.collectAsState()
+     With:
+     val isEditing by mainViewModel.isEditingRecipe.collectAsState()
+
+     Remove the FloatingActionButton (Edit FAB) from the view-only block — the
+     top app bar button replaces it. Keep the Spacer(height = 80.dp) removal
+     too.
+
+     5 — AddEditRecipeViewModel.kt: Remove now-redundant state
+
+     Remove:
+     - private val _isEditing = MutableStateFlow(true)
+     - val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow()
+     - fun enableEditing() { _isEditing.value = true }
+     - _isEditing.value = (recipeId == 0L) line inside loadRecipe
+
+     ---
+     Behaviour
+
+     ┌───────────────────────────┬─────────────────────────────────────────────┐
+     │          Action           │                   Result                    │
+     ├───────────────────────────┼─────────────────────────────────────────────┤
+     │ Open existing recipe      │ View mode — Edit icon in app bar (default   │
+     │                           │ tint)                                       │
+     ├───────────────────────────┼─────────────────────────────────────────────┤
+     │ Tap Edit icon (view mode) │ Switches to edit mode — icon turns Lime600  │
+     ├───────────────────────────┼─────────────────────────────────────────────┤
+     │ Tap Edit icon again (edit │ Returns to view mode — icon returns to      │
+     │  mode)                    │ default tint                                │
+     ├───────────────────────────┼─────────────────────────────────────────────┤
+     │ Open new recipe (id=0)    │ Edit mode directly — icon shown as Lime600  │
+     ├───────────────────────────┼─────────────────────────────────────────────┤
+     │ Press back arrow          │ Existing unsaved-changes dialog behavior    │
+     │                           │ unchanged                                   │
+     └───────────────────────────┴─────────────────────────────────────────────┘
+
+● Auto mode lets Claude handle permission prompts automatically — Claude
+   checks each tool call for risky actions and prompt injection before 
+  executing. Actions Claude identifies as safe are executed, while 
+  actions Claude identifies as risky are blocked and Claude may try a 
+  different approach. Ideal for long-running tasks. Sessions are 
+  slightly more expensive. Claude can make mistakes that allow harmful 
+  commands to run, it's recommended to only use in isolated 
+  environments. Shift+Tab to change mode.
+
+● Now implementing all 5 changes. Let me first find the right place in
+  MainViewModel:
+
+  Searched for 1 pattern, read 1 file (ctrl+o to expand)
+
+● Now I have everything I need. Making all changes in parallel:
+
+● Update(app\src\main\java\com\felix\mealplanner20\ViewModels\MainViewModel.kt)
+  ⎿  Added 6 lines
+      74      private val _changesMade = MutableStateFlow<Boolean>(false)
+      75      val changesMade: StateFlow<Boolean> = _changesMade
+      76  
+      77 +    private val _isEditingRecipe = MutableStateFlow(false)     
+      78 +    val isEditingRecipe: StateFlow<Boolean> = _isEditingRecipe 
+      79 +                                                               
+      80 +    fun setRecipeEditMode(isEditing: Boolean) { _isEditingRecip
+         +e.value = isEditing }                                          
+      81 +    fun toggleRecipeEditMode() { _isEditingRecipe.value = !_isE
+         +ditingRecipe.value }                                           
+      82 +                                                               
+      83      fun cleanUnusedRecipeImages(context: Context){
+      84          viewModelScope.launch {
+      85              cleanUnusedRecipeImagesUseCase.invoke(context)
+
+● Now Navigation.kt — add LaunchedEffect(id) and check for the needed import:
+
+  Read 1 file (ctrl+o to expand)
+
+● LaunchedEffect is already imported. Now add it to the recipe composable:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Navigation.kt)
+  ⎿  Added 1 line
+      275                      val id = if(it.arguments != null) it.argum
+           ents!!.getLong(ADD_EDIT_RECIPE_KEY) else 0L
+      276                      val sharedRecipeViewModel = it.sharedViewM
+           odel<AddEditRecipeViewModel>(navController)
+      277                      sharedRecipeViewModel.loadRecipe(id,true)
+      278 +                    LaunchedEffect(id) { mainViewModel.setReci
+          +peEditMode(id == 0L) }                                        
+      279                      AddEditRecipeView(recipeId = id, addEditRe
+           cipeViewModel = sharedRecipeViewModel, navController = navCont
+           roller,mainViewModel)
+      280                      mainViewModel.setChangesMade(false)
+      281                      mainViewModel.setCurrentScreen(Screen.AddU
+           pdateRecipeScreen(context))
+
+● Now update AddUpdateRecipeTopAppBar in MainView.kt:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)
+  ⎿  Added 1 line
+      28  import androidx.compose.material3.TabRowDefaults
+      29  import androidx.compose.material.icons.Icons
+      30  import androidx.compose.material.icons.automirrored.filled.Arro
+          wBack
+      31 +import androidx.compose.material.icons.filled.Edit             
+      32  import androidx.compose.material3.ExperimentalMaterial3Api
+      33  import androidx.compose.material3.Icon
+      34  import androidx.compose.material3.MaterialTheme
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)  ⎿  Added 3 lines, removed 1 line
+      198                  Screen.AddUpdateRecipeScreen(context).route ->
+            AddUpdateRecipeTopAppBar(
+      199                      navController = navController,
+      200                      title = mainViewModel.currentTopAppBarTitl
+           e.value,
+      201 -                    mainViewModel = mainViewModel             
+      201 +                    mainViewModel = mainViewModel,            
+      202 +                    isEditingRecipe = mainViewModel.isEditingR
+          +ecipe.collectAsState().value,                                 
+      203 +                    onToggleEditMode = { mainViewModel.toggleR
+          +ecipeEditMode() }                                             
+      204                  )
+      205                  Screen.RecipeViewOnlyScreen(context).route -> 
+           {}
+      206  
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)
+  ⎿  Added 12 lines, removed 1 line
+      410  fun AddUpdateRecipeTopAppBar(
+      411      navController: NavHostController,
+      412      title: String,
+      413 -    mainViewModel: MainViewModel                              
+      413 +    mainViewModel: MainViewModel,                             
+      414 +    isEditingRecipe: Boolean = false,                         
+      415 +    onToggleEditMode: () -> Unit = {}                         
+      416  ){
+      417      TopAppBar(
+      418          colors = TopAppBarColors(
+     ...
+      423              actionIconContentColor = Slate950
+      424          ),
+      425          title = { Text(text = title) },
+      426 +        actions = {                                           
+      427 +            IconButton(onClick = onToggleEditMode) {          
+      428 +                Icon(                                         
+      429 +                    imageVector = Icons.Default.Edit,         
+      430 +                    contentDescription = if (isEditingRecipe) 
+          +"Exit edit mode" else "Edit recipe",                          
+      431 +                    tint = if (isEditingRecipe) Lime600 else S
+          +late950                                                       
+      432 +                )                                             
+      433 +            }                                                 
+      434 +        },                                                    
+      435          navigationIcon = {
+      436              IconButton(
+      437                  onClick = {
+
+● Now check if Lime600 is imported in MainView.kt:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Need to add the Lime600 import:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)
+  ⎿  Added 1 line
+      78  import com.felix.mealplanner20.ViewModels.RecipeCatalogViewMode
+          l
+      79  import com.felix.mealplanner20.ViewModels.SettingsViewModel
+      80  import com.felix.mealplanner20.ui.theme.Lime500
+      81 +import com.felix.mealplanner20.ui.theme.Lime600                
+      82  import com.felix.mealplanner20.ui.theme.Slate200
+      83  import com.felix.mealplanner20.ui.theme.Slate400
+      84  import com.felix.mealplanner20.ui.theme.Slate500
+
+● Now update AddEditRecipeView.kt — swap isEditing source and remove the FAB:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line, removed 1 line
+      150  
+      151  
+      152      val allowedUnitsMap by addEditRecipeViewModel.allowedUnits
+           ForIngredients.collectAsState()
+      153 -    val isEditing by addEditRecipeViewModel.isEditing.collectA
+          -sState()                                                      
+      153 +    val isEditing by mainViewModel.isEditingRecipe.collectAsSt
+          +ate()                                                         
+      154  
+      155      val publishRequirementHasIngredient by addEditRecipeViewMo
+           del.publishRequirementHasIngredient.collectAsState()
+      156      val publishRequirementTypeSelected by addEditRecipeViewMod
+           el.publishRequirementTypeSelected.collectAsState()
+
+● Now remove the Edit FAB from the view-only block (keep the rest of the block
+  intact):
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line, removed 12 lines
+      331                      recipeViewModel = addEditRecipeViewModel
+      332                  )
+      333                  CookModeDescriptionBlock(addEditRecipeViewMode
+           l)
+      334 -                Spacer(modifier = Modifier.height(80.dp))     
+      334 +                Spacer(modifier = Modifier.height(16.dp))     
+      335              }
+      336 -            FloatingActionButton(                             
+      337 -                onClick = { addEditRecipeViewModel.enableEditi
+          -ng() },                                                       
+      338 -                modifier = Modifier                           
+      339 -                    .align(Alignment.BottomEnd)               
+      340 -                    .padding(16.dp),                          
+      341 -                shape = CircleShape,                          
+      342 -                containerColor = Lime600,                     
+      343 -                contentColor = Color.White                    
+      344 -            ) {                                               
+      345 -                Icon(Icons.Default.Edit, contentDescription = 
+          -"Edit")                                                       
+      346 -            }                                                 
+      336          }
+      337      } else {
+      338      Box(
+
+● Now clean up AddEditRecipeViewModel.kt — remove the redundant isEditing state:
+
+● Update(app\src\main\java\com\felix\mealplanner20\ViewModels\AddEditRecipeViewM
+        odel.kt)
+  ⎿  Removed 5 lines
+      63      private var _isDirty = mutableStateOf(false)
+      64      val isDirty:State<Boolean> = _isDirty
+      65  
+      66 -    private val _isEditing = MutableStateFlow(true)            
+      67 -    val isEditing: StateFlow<Boolean> = _isEditing.asStateFlow(
+         -)                                                              
+      68 -                                                               
+      69 -    fun enableEditing() { _isEditing.value = true }            
+      70 -                                                               
+      66      var recipeIngredients by mutableStateOf<List<IngredientWith
+          Recipe>>(emptyList())
+      67  
+      68      private val recipeIngredientsFlow: Flow<List<IngredientWith
+          Recipe>> =
+
+● Update(app\src\main\java\com\felix\mealplanner20\ViewModels\AddEditRecipeViewM
+        odel.kt)
+  ⎿  Added 1 line, removed 3 lines
+      446          UnitOfMeasure.CLOVE -> 1f
+      447      }
+      448      fun loadRecipe(recipeId: Long,checkForHasLoaded:Boolean) {
+      449 -        if(!checkForHasLoaded or !hasLoaded){                 
+      450 -        _isEditing.value = (recipeId == 0L)                   
+      451 -        viewModelScope.launch {                               
+      449 +        if(!checkForHasLoaded or !hasLoaded){viewModelScope.la
+          +unch {                                                        
+      450              try {
+      451                  recipeUseCase.getRecipeByIdUseCase(recipeId)?.
+           let { recipe ->
+      452                      val myRecipe = recipe.first()
+
+● Now also remove the unused Icons.Default.Edit import from AddEditRecipeView.kt
+   since the FAB is gone:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Not used anymore — remove the import:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Removed 1 line
+      48  import androidx.compose.material.icons.Icons
+      49  import androidx.compose.material.icons.filled.Add
+      50  import androidx.compose.material.icons.filled.ArrowDropDown
+      51 -import androidx.compose.material.icons.filled.Edit             
+      51  import androidx.compose.material.icons.filled.CheckCircle
+      52  import androidx.compose.material.icons.filled.Delete
+      53  import androidx.compose.material.icons.filled.Place
+
+● All 5 changes are done. Here's a summary of what changed:
+
+  - MainViewModel.kt — Added isEditingRecipe StateFlow + setRecipeEditMode() /
+  toggleRecipeEditMode()
+  - Navigation.kt — Added LaunchedEffect(id) { 
+  mainViewModel.setRecipeEditMode(id == 0L) } so existing recipes open in view
+  mode and new ones in edit mode
+  - MainView.kt — AddUpdateRecipeTopAppBar now shows a pencil icon in actions;
+  tinted Lime600 when editing, grey when viewing; clicking it calls
+  toggleRecipeEditMode()
+  - AddEditRecipeView.kt — isEditing now reads from
+  mainViewModel.isEditingRecipe; the Edit FAB is removed
+  - AddEditRecipeViewModel.kt — Removed _isEditing, isEditing, enableEditing(),
+  and the assignment in loadRecipe
+
+✻ Cogitated for 3m 23s
+
+❯ On first glance it looks good. Please make an analyzation of what could have  
+  possbile gone wrong, and what needs to be checked to make sure this feature   
+  is production ready                                                           
+
+● Let me read the current state of the key files to analyze precisely rather
+  than from memory.
+
+  Read 3 files (ctrl+o to expand)
+
+● Here is the full analysis:
+
+  ---
+  Potential Issues
+
+  1. Critical — Unsaved changes lost via system back in view mode
+
+  Where: AddEditRecipeView.kt:166
+
+  BackHandler(enabled = isEditing) { ... }
+
+  Problem: If the user opens a recipe, enters edit mode, makes changes
+  (changesMade = true), then taps the toggle to return to view mode — the
+  BackHandler becomes disabled. A swipe-back or hardware back press then pops
+  the screen immediately with no warning. The top app bar back arrow still
+  checks changesMade so it would show the dialog, but the system gesture would
+  not.
+
+  Fix: Change to BackHandler(enabled = isEditing || changesMade) so the
+  unsaved-changes guard stays active even after toggling back to view mode.
+
+  ---
+  2. Critical — collectAsState() called inside a conditional branch
+
+  Where: MainView.kt:203
+
+  Screen.AddUpdateRecipeScreen(context).route -> AddUpdateRecipeTopAppBar(
+      ...
+      isEditingRecipe = mainViewModel.isEditingRecipe.collectAsState().value,
+
+  Problem: collectAsState() is a composable function and must be called
+  unconditionally (Compose's Rules of Composables). When the route changes away
+  from AddUpdateRecipeScreen and then back, this creates a new collectAsState()
+  call at a different position in the composition tree, which can cause a
+  runtime crash or silent misbehavior.
+
+  Fix: Hoist the collectAsState() call to the top of MainView():
+  val isEditingRecipe by mainViewModel.isEditingRecipe.collectAsState()
+  Then pass isEditingRecipe directly to the call site.
+
+  ---
+  3. One-frame flash — new recipe opens briefly in view mode
+
+  Where: Navigation.kt:278
+
+  LaunchedEffect(id) { mainViewModel.setRecipeEditMode(id == 0L) }
+
+  Problem: LaunchedEffect is asynchronous — it runs after the first frame is
+  committed. On first composition, isEditingRecipe is still false
+  (MainViewModel's initial value). For a new recipe (id = 0), there is
+  technically one frame where the view-only layout is rendered before edit mode
+  activates.
+
+  In practice this is likely invisible because isLoading = true on first frame
+  shows the spinner, not the content. But it is worth verifying in a debug build
+   with slow device mode enabled.
+
+  ---
+  4. View mode displayed with stale unsaved changes — UX risk
+
+  Scenario: User opens recipe → edits title/ingredients → taps toggle icon →
+  returns to view mode without saving.
+
+  The view-only layout reads directly from addEditRecipeViewModel.recipeName,
+  recipeIngredients, etc., so it will render the unsaved state of the recipe.
+  This is internally consistent but could confuse the user who doesn't realise
+  the view mode is showing uncommitted edits. There is no visual indicator (e.g.
+   a "Unsaved" banner) in view mode.
+
+  ---
+  5. mainViewModel.setChangesMade(false) runs on every recomposition
+
+  Where: Navigation.kt:280
+
+  mainViewModel.setChangesMade(false)
+
+  This is in the composable body, not in a LaunchedEffect, so it executes on
+  every recomposition of the NavHost. Any state change that causes a
+  recomposition of the nav graph (e.g. the title updating when the recipe loads)
+   will silently reset changesMade to false.
+
+  This is a pre-existing bug not introduced by this feature, but it interacts
+  badly with the new toggle: a user could make a change, have a recomposition
+  reset changesMade, then have no unsaved-changes dialog triggered on back.
+  Worth tracking down separately.
+
+  ---
+  Checklist of things to verify manually
+
+  ┌──────────────────────────────────┬──────────────────────────────────────┐
+  │             Scenario             │               Expected               │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Open existing recipe             │ View mode, pencil icon grey          │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Tap pencil icon                  │ Switches to edit mode, icon turns    │
+  │                                  │ green                                │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Tap pencil icon again            │ Returns to view mode, icon turns     │
+  │                                  │ grey                                 │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Open new recipe (+ FAB)          │ Opens directly in edit mode, icon    │
+  │                                  │ green                                │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Edit recipe, toggle back to      │ Should show unsaved-changes dialog   │
+  │ view, press gesture back         │ (currently broken — see #1)          │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Edit recipe, toggle back to      │                                      │
+  │ view, press back arrow in top    │ Shows unsaved-changes dialog ✓       │
+  │ bar                              │                                      │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Navigate to Add Ingredient       │ Edit mode preserved ✓                │
+  │ sub-screen and return            │                                      │
+  ├──────────────────────────────────┼──────────────────────────────────────┤
+  │ Rotate screen while in edit mode │ Edit mode preserved (MainViewModel   │
+  │                                  │ survives rotation) ✓                 │
+  └──────────────────────────────────┴──────────────────────────────────────┘
+
+  The two items that need code fixes before production are #1 (BackHandler) and
+  #2 (collectAsState in conditional). The rest are observation/verification
+  tasks or pre-existing issues.
+
+✻ Baked for 1m 41s
+
+❯ fix the 2 critical bugs                                                       
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 1 line, removed 1 line
+      163      val isApplyingWizard by addEditRecipeViewModel.isApplyingW
+           izard.collectAsState()
+      164      val wizardStepsAppliedCount by addEditRecipeViewModel.wiza
+           rdStepsAppliedCount.collectAsState()
+      165  
+      166 -    BackHandler(enabled = isEditing) {                        
+      166 +    BackHandler(enabled = isEditing || changesMade) {         
+      167          if(changesMade) {
+      168              mainViewModel.setShowExitWithoutSaveAlertDialog(tr
+           ue)
+      169          }
+
+● Now fix the collectAsState() in MainView. Read the top of MainView() first to
+  find the right insertion point:
+
+  Read 1 file (ctrl+o to expand)
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)  ⎿  Added 1 line
+      102      val navBackStackEntry by navController.currentBackStackEnt
+           ryAsState()
+      103      val currentRoute = navBackStackEntry?.destination?.route
+      104      val showOnboarding by mainViewModel.showOnboarding.collect
+           AsState()
+      105 +    val isEditingRecipe by mainViewModel.isEditingRecipe.colle
+          +ctAsState()                                                   
+      106  
+      107      val title = remember {
+      108          mutableStateOf(mainViewModel.currentScreen.value.title
+           )
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)
+  ⎿  Added 1 line, removed 1 line
+      201                      navController = navController,
+      202                      title = mainViewModel.currentTopAppBarTitl
+           e.value,
+      203                      mainViewModel = mainViewModel,
+      204 -                    isEditingRecipe = mainViewModel.isEditingR
+          -ecipe.collectAsState().value,                                 
+      204 +                    isEditingRecipe = isEditingRecipe,        
+      205                      onToggleEditMode = { mainViewModel.toggleR
+           ecipeEditMode() }
+      206                  )
+      207                  Screen.RecipeViewOnlyScreen(context).route -> 
+           {}
+
+● Both fixes applied:
+
+  1. AddEditRecipeView.kt — BackHandler(enabled = isEditing || changesMade)
+  keeps the unsaved-changes guard active even after toggling back to view mode.
+  2. MainView.kt — val isEditingRecipe by 
+  mainViewModel.isEditingRecipe.collectAsState() is now collected
+  unconditionally at the top of MainView(), and the hoisted value is passed down
+   to the call site instead of calling collectAsState() inside the when branch.
+
+✻ Crunched for 24s
+
+❯ I can enter edit mode, make a change, leave edit mode and the go back without 
+   the warning. Please analyze if we need the isDirty variable instead or       
+  additionally to protect the user against this                                 
+
+● Let me read the exact Navigation.kt recomposition issue and the BackHandler
+  together:
+
+  Read 2 files (ctrl+o to expand)
+
+● The root cause is clear. Here's the precise chain:
+
+  1. User makes a change → changeAnything() sets isDirty = true AND calls
+  mainViewModel.setChangesMade(true)
+  2. User taps the toggle icon → isEditingRecipe emits false → MainView
+  recomposes → NavHost recomposes → line 280 in Navigation.kt runs:
+  mainViewModel.setChangesMade(false)
+  3. BackHandler re-evaluates enabled = false || false → disabled → system back
+  silently pops
+
+  isDirty is the correct flag. It lives in AddEditRecipeViewModel, is set inside
+   changeAnything(), and is only reset on a successful save/update/delete. It is
+   never touched in a composable body, so it survives recomposition. changesMade
+   in MainViewModel is not reliable here because of line 280.
+
+  isDirty is already collected at line 147 in AddEditRecipeView. Fix both the
+  enabled condition and the inner check:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 2 lines, removed 2 lines
+      163      val isApplyingWizard by addEditRecipeViewModel.isApplyingW
+           izard.collectAsState()
+      164      val wizardStepsAppliedCount by addEditRecipeViewModel.wiza
+           rdStepsAppliedCount.collectAsState()
+      165  
+      166 -    BackHandler(enabled = isEditing || changesMade) {         
+      167 -        if(changesMade) {                                     
+      166 +    BackHandler(enabled = isEditing || isDirty) {             
+      167 +        if(isDirty) {                                         
+      168              mainViewModel.setShowExitWithoutSaveAlertDialog(tr
+           ue)
+      169          }
+      170          else{
+
+● changesMade is still used by the top app bar back button
+  (AddUpdateRecipeTopAppBar calls mainViewModel.changesMade.value). That path is
+   less dangerous in practice — the recomposition that resets it only fires on
+  state changes, not on a simple button tap — but it's worth noting as the same
+  underlying fragility. The BackHandler path (the one that was broken) is now
+  guarded by isDirty which is recomposition-safe.
+
+✻ Churned for 58s
+
+❯ please realize that there are currently multible ways of navigating back.     
+  please make an in dept analyzaion of the isdirty/changesmade logic            
+
+● Let me read all the relevant pieces carefully before drawing any conclusions.
+
+  Searched for 2 patterns, read 4 files (ctrl+o to expand)
+
+● Now I have the full picture. Here is the complete analysis.
+
+  ---
+  All Back Navigation Paths
+
+  There are 4 distinct paths that navigate back from the recipe screen, each
+  with different behavior.
+
+  ---
+  Path 1 — System back (gesture / hardware button)
+
+  Code: AddEditRecipeView.kt:166
+  BackHandler(enabled = isEditing || isDirty) {
+      if(isDirty) { mainViewModel.setShowExitWithoutSaveAlertDialog(true) }
+      else { navController.navigateUp() }
+  }
+  Guard: isDirty from AddEditRecipeViewModel — recomposition-safe, reset only on
+   save/delete.
+  Status: Correct ✓
+
+  ---
+  Path 2 — Top app bar back arrow
+
+  Code: MainView.kt:440
+  if(mainViewModel.changesMade.value) {
+      mainViewModel.setShowExitWithoutSaveAlertDialog(true)
+  } else {
+      navController.navigateUp()
+  }
+  Guard: changesMade.value from MainViewModel.
+
+  Problem: changesMade is reset to false on every recomposition at
+  Navigation.kt:280:
+  mainViewModel.setChangesMade(false)  // runs on every recompose
+  Whenever any state change triggers a recomposition of the NavHost (including
+  the toggle itself, the title loading, or any other state emission),
+  changesMade silently resets. The back arrow then always calls navigateUp()
+  directly, regardless of whether the recipe has been modified.
+
+  AddUpdateRecipeTopAppBar has no access to addEditRecipeViewModel, so it cannot
+   read isDirty directly. Some bridge is needed.
+
+  Status: Broken — uses unreliable changesMade ✗
+
+  ---
+  Path 3 — View-only mode back arrow (inside the image)
+
+  Code: AddEditRecipeView.kt:313
+  BigImageWithBackArrow(
+      imgUri = addEditRecipeViewModel.imgUri.value,
+      onArrowClick = { navController.navigateUp() }
+  )
+  Guard: None whatsoever — raw navigateUp().
+
+  This arrow is only visible when !isEditing. The dangerous scenario:
+  1. Open recipe → view mode
+  2. Tap pencil → edit mode, make changes (isDirty = true)
+  3. Tap pencil again → back to view mode
+  4. Tap the image back arrow → navigateUp() immediately, changes lost, no
+  dialog
+
+  isDirty is already available in the composable at this point, so a guard can
+  be added directly to this lambda.
+
+  Status: Broken — no guard at all ✗
+
+  ---
+  Path 4 — Delete button / Save new recipe
+
+  Code: AddEditRecipeView.kt:486, 511
+  // delete
+  navController.navigateUp()
+
+  // save new recipe (id = 0)
+  addEditRecipeViewModel.saveRecipeToDatabase(context)
+  navController.navigateUp()
+  Both are intentional exits after a deliberate destructive or saving action. No
+   guard needed.
+
+  Status: Correct ✓
+
+  ---
+  State Reliability Comparison
+
+  Flag: isDirty
+  Lives in: AddEditRecipeViewModel
+  Set to true: changeAnything() (every field edit)
+  Reset to false: saveRecipeToDatabase, updateRecipeToDatabase,
+    resetBaselineToCurrent
+  Recomposition-safe: Yes
+  ────────────────────────────────────────
+  Flag: changesMade
+  Lives in: MainViewModel
+  Set to true: additionalAction in each changeAnything call
+  Reset to false: setChangesMade(false) — called at Navigation.kt:280 on every 
+    recompose
+  Recomposition-safe: No
+
+  isDirty is the authoritative flag. changesMade is structurally broken as a
+  guard because of the bare call in the composable body.
+
+  ---
+  What Needs Fixing
+
+  ┌───────────────┬─────────────────────────────────────────────────────────┐
+  │     Path      │                       Fix needed                        │
+  ├───────────────┼─────────────────────────────────────────────────────────┤
+  │ System back   │ Already fixed ✓                                         │
+  ├───────────────┼─────────────────────────────────────────────────────────┤
+  │               │ Needs isDirty bridged into MainViewModel (new           │
+  │ Top app bar   │ isDirtyRecipe: StateFlow + LaunchedEffect sync in       │
+  │ back arrow    │ AddEditRecipeView), then AddUpdateRecipeTopAppBar reads │
+  │               │  it                                                     │
+  ├───────────────┼─────────────────────────────────────────────────────────┤
+  │ View-only     │ Needs guard added inline — isDirty is already in scope  │
+  │ image back    │ in AddEditRecipeView                                    │
+  │ arrow         │                                                         │
+  ├───────────────┼─────────────────────────────────────────────────────────┤
+  │ Delete / save │ No change needed ✓                                      │
+  └───────────────┴─────────────────────────────────────────────────────────┘
+
+  The view-only arrow fix is a one-liner. The top app bar fix requires bridging
+  isDirty through MainViewModel since the top bar composable is outside the nav
+  graph and has no direct ViewModel access. Should I implement both?
+
+✻ Crunched for 1m 29s
+
+❯ fix both                                                                      
+
+● Three changes: add isDirtyRecipe to MainViewModel, sync it from
+  AddEditRecipeView, fix both broken back paths.
+
+● Update(app\src\main\java\com\felix\mealplanner20\ViewModels\MainViewModel.kt)
+  ⎿  Added 5 lines
+      80      fun setRecipeEditMode(isEditing: Boolean) { _isEditingRecip
+          e.value = isEditing }
+      81      fun toggleRecipeEditMode() { _isEditingRecipe.value = !_isE
+          ditingRecipe.value }
+      82  
+      83 +    private val _isDirtyRecipe = MutableStateFlow(false)       
+      84 +    val isDirtyRecipe: StateFlow<Boolean> = _isDirtyRecipe     
+      85 +                                                               
+      86 +    fun setRecipeDirty(dirty: Boolean) { _isDirtyRecipe.value =
+         + dirty }                                                       
+      87 +                                                               
+      88      fun cleanUnusedRecipeImages(context: Context){
+      89          viewModelScope.launch {
+      90              cleanUnusedRecipeImagesUseCase.invoke(context)
+
+● Sync isDirty into MainViewModel from AddEditRecipeView, and fix the view-only
+  back arrow at the same time:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 2 lines
+      163      val isApplyingWizard by addEditRecipeViewModel.isApplyingW
+           izard.collectAsState()
+      164      val wizardStepsAppliedCount by addEditRecipeViewModel.wiza
+           rdStepsAppliedCount.collectAsState()
+      165  
+      166 +    LaunchedEffect(isDirty) { mainViewModel.setRecipeDirty(isD
+          +irty) }                                                       
+      167 +                                                              
+      168      BackHandler(enabled = isEditing || isDirty) {
+      169          if(isDirty) {
+      170              mainViewModel.setShowExitWithoutSaveAlertDialog(tr
+           ue)
+
+● Now fix the view-only back arrow (Path 3):
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 4 lines, removed 1 line
+      312              ) {
+      313                  BigImageWithBackArrow(
+      314                      imgUri = addEditRecipeViewModel.imgUri.val
+           ue,
+      315 -                    onArrowClick = { navController.navigateUp(
+          -) }                                                           
+      315 +                    onArrowClick = {                          
+      316 +                        if (isDirty) mainViewModel.setShowExit
+          +WithoutSaveAlertDialog(true)                                  
+      317 +                        else navController.navigateUp()       
+      318 +                    }                                         
+      319                  )
+      320                  Column(
+      321                      modifier = Modifier
+
+● Now fix the top app bar back arrow (Path 2) to use isDirtyRecipe instead of
+  changesMade:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\MainView.kt)
+  ⎿  Added 1 line, removed 1 line
+      437          navigationIcon = {
+      438              IconButton(
+      439                  onClick = {
+      440 -                    if(mainViewModel.changesMade.value){      
+      440 +                    if(mainViewModel.isDirtyRecipe.value){    
+      441                          mainViewModel.setShowExitWithoutSaveAl
+           ertDialog(true)
+      442                      }else{
+      443                          navController.navigateUp()
+
+● All four paths now have consistent behavior:
+
+  ┌───────────────┬──────────────────────────────────────────┬─────────────┐
+  │     Path      │                  Guard                   │   Fixed?    │
+  ├───────────────┼──────────────────────────────────────────┼─────────────┤
+  │ System back   │ isDirty via BackHandler                  │ ✓ (previous │
+  │               │                                          │  fix)       │
+  ├───────────────┼──────────────────────────────────────────┼─────────────┤
+  │ Top app bar   │ mainViewModel.isDirtyRecipe.value        │ ✓ now       │
+  │ back arrow    │ (synced from isDirty)                    │             │
+  ├───────────────┼──────────────────────────────────────────┼─────────────┤
+  │ View-only     │ isDirty inline check                     │ ✓ now       │
+  │ image arrow   │                                          │             │
+  ├───────────────┼──────────────────────────────────────────┼─────────────┤
+  │ Delete / save │ No guard needed                          │ ✓ unchanged │
+  └───────────────┴──────────────────────────────────────────┴─────────────┘
+
+  The sync is done via LaunchedEffect(isDirty) { 
+  mainViewModel.setRecipeDirty(isDirty) } — whenever isDirty changes in the
+  ViewModel, MainViewModel is updated on the next recompose frame. The top app
+  bar reads .value directly inside a click handler (not during composition), so
+  it always gets the current value at tap time.
+
+✻ Worked for 41s
+
+❯ now in the viewmode the back ist blocked, but the dialog doesnt appear. it    
+  appaer after navigating back to the editview                                  
+● The dialog is rendered inside the else { // edit mode } branch, so when
+  isEditing = false the composable that shows it never enters the tree. Setting
+  showExitWithoutSaveAlertDialog = true has no visible effect until the edit
+  branch is entered again. The fix is to move the dialog above the if 
+  (!isEditing) split.
+
+  Read 1 file (ctrl+o to expand)
+
+● Clear. Move the dialog above the if (!isEditing) split and remove it from
+  inside the edit branch:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Added 11 lines
+      302      }
+      303      else{
+      304      mainViewModel.setCurrentTopAppBarTitle(addEditRecipeViewMo
+           del.recipeName.value)
+      305 +    if (mainViewModel.showExitWithoutSaveAlertDialog.value) { 
+      306 +        CustomAlertDialog(                                    
+      307 +            title = stringResource(R.string.confirm_exit_witho
+          +ut_saving),                                                   
+      308 +            text  = stringResource(R.string.do_you_really_want
+          +_to_go_back_your_changes_will_not_be_saved),                  
+      309 +            onConfirm = {                                     
+      310 +                navController.navigateUp()                    
+      311 +                mainViewModel.setShowExitWithoutSaveAlertDialo
+          +g(false)                                                      
+      312 +            },                                                
+      313 +            onDismiss = { mainViewModel.setShowExitWithoutSave
+          +AlertDialog(false) }                                          
+      314 +        )                                                     
+      315 +    }                                                         
+      316      if (!isEditing) {
+      317          Box(modifier = Modifier.fillMaxSize()) {
+      318              Column(
+
+● Now remove the duplicate dialog from inside the edit branch:
+
+● Update(app\src\main\java\com\felix\mealplanner20\Views\Recipes\AddEditRecipeVi
+        ew.kt)
+  ⎿  Removed 12 lines
+      360          Column( modifier = Modifier
+      361              .background(Slate200)
+      362          ){
+      363 -            if(mainViewModel.showExitWithoutSaveAlertDialog.va
+          -lue){                                                         
+      364 -                CustomAlertDialog(                            
+      365 -                    title = stringResource(R.string.confirm_ex
+          -it_without_saving),                                           
+      366 -                    text  = stringResource(R.string.do_you_rea
+          -lly_want_to_go_back_your_changes_will_not_be_saved),          
+      367 -                    onConfirm = {                             
+      368 -                        navController.navigateUp()            
+      369 -                        mainViewModel.setShowExitWithoutSaveAl
+          -ertDialog(false)                                              
+      370 -                    },                                        
+      371 -                    onDismiss = { mainViewModel.setShowExitWit
+          -houtSaveAlertDialog(false) }                                  
+      372 -                )                                             
+      373 -            }                                                 
+      374 -                                                              
+      363              if (unmatchedWizardIngredients.isNotEmpty()) {
+      364                  UnmatchedWizardIngredientsDialog(
+      365                      items = unmatchedWizardIngredients,
+
+● The dialog is now rendered at the top level of the else block — outside both
+  the view-only and edit branches — so it appears correctly regardless of which
+  mode is active when the back gesture fires.
+
+✻ Worked for 38s
+
+❯ the dialog looks fine now. However when adding a ingredient we dont return to 
+   the edeting view we came from but to the viewonly mode. please change that   
+
+● The cause is clear: when AddIngredientToRecipeScreen is pushed, Compose
+  disposes the AddUpdateRecipeScreen composable. When it reappears on
+  back-press, Compose re-runs the composable body including LaunchedEffect(id) —
+   which fires again with the same id and resets the mode to view. Let me read
+  the exact navigation composable and imports:
+
+  Read 1 file (ctrl+o to expand)
+
+● rememberSaveable is not imported. The fix uses it to mark that edit mode was
+  already initialised for this back-stack entry — the value survives the
+  composable being disposed and recomposed while the entry is still on the back
+  stack, but resets to false when the entry is fully popped and a new one is
+  created.
+
+● Update(app\src\main\java\com\felix\mealplanner20\Navigation.kt)
+  ⎿  Added 1 line
+      10  import androidx.compose.runtime.LaunchedEffect
+      11  import androidx.compose.runtime.mutableStateOf
+      12  import androidx.compose.runtime.remember
+      13 +import androidx.compose.runtime.saveable.rememberSaveable      
+      14  import androidx.compose.ui.platform.LocalContext
+      15  import androidx.compose.ui.res.stringResource
+      16  import androidx.hilt.navigation.compose.hiltViewModel
+
+● Update(app\src\main\java\com\felix\mealplanner20\Navigation.kt)
+  ⎿  Added 7 lines, removed 1 line
+      276                      val id = if(it.arguments != null) it.argum
+           ents!!.getLong(ADD_EDIT_RECIPE_KEY) else 0L
+      277                      val sharedRecipeViewModel = it.sharedViewM
+           odel<AddEditRecipeViewModel>(navController)
+      278                      sharedRecipeViewModel.loadRecipe(id,true)
+      279 -                    LaunchedEffect(id) { mainViewModel.setReci
+          -peEditMode(id == 0L) }                                        
+      279 +                    val editModeInitialized = rememberSaveable
+          + { mutableStateOf(false) }                                    
+      280 +                    LaunchedEffect(editModeInitialized.value) 
+          +{                                                             
+      281 +                        if (!editModeInitialized.value) {     
+      282 +                            mainViewModel.setRecipeEditMode(id
+          + == 0L)                                                       
+      283 +                            editModeInitialized.value = true  
+      284 +                        }                                     
+      285 +                    }                                         
+      286                      AddEditRecipeView(recipeId = id, addEditRe
+           cipeViewModel = sharedRecipeViewModel, navController = navCont
+           roller,mainViewModel)
+      287                      mainViewModel.setChangesMade(false)
+      288                      mainViewModel.setCurrentScreen(Screen.AddU
+           pdateRecipeScreen(context))
+
+● How this works:
+
+  - First entry (editModeInitialized = false) → LaunchedEffect(false) fires →
+  sets the edit mode → flips flag to true
+  - Return from sub-screen → composable recomposes, but rememberSaveable
+  restores editModeInitialized = true because the back-stack entry is still
+  alive → LaunchedEffect(true) key hasn't changed → does not re-fire → mode
+  preserved
+  - New visit to the same recipe (entry was fully popped, new entry created) →
+  rememberSaveable resets to false → fires again → mode correctly reset to view
+
+✻ Crunched for 3m 7s

@@ -1,6 +1,7 @@
 package com.felix.mealplanner20.use_cases
 
 data class RecipeUseCases(
+    val addCustomShoppingListItemUseCase: AddCustomShoppingListItemUseCase,
     val addRecipeUseCase: AddRecipeUseCase,
     val getRecipeByIdUseCase: GetRecipeByIdUseCase,
     val getAllIngredientsForOneRecipeUseCase: GetAllIngredientsForOneRecipeUseCase,

@@ -28,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -77,6 +78,7 @@ import com.felix.mealplanner20.ViewModels.MainViewModel
 import com.felix.mealplanner20.ViewModels.RecipeCatalogViewModel
 import com.felix.mealplanner20.ViewModels.SettingsViewModel
 import com.felix.mealplanner20.ui.theme.Lime500
+import com.felix.mealplanner20.ui.theme.Lime600
 import com.felix.mealplanner20.ui.theme.Slate200
 import com.felix.mealplanner20.ui.theme.Slate400
 import com.felix.mealplanner20.ui.theme.Slate500
@@ -100,6 +102,7 @@ fun MainView (){
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showOnboarding by mainViewModel.showOnboarding.collectAsState()
+    val isEditingRecipe by mainViewModel.isEditingRecipe.collectAsState()
 
     val title = remember {
         mutableStateOf(mainViewModel.currentScreen.value.title)
@@ -197,7 +200,9 @@ fun MainView (){
                 Screen.AddUpdateRecipeScreen(context).route -> AddUpdateRecipeTopAppBar(
                     navController = navController,
                     title = mainViewModel.currentTopAppBarTitle.value,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    isEditingRecipe = isEditingRecipe,
+                    onToggleEditMode = { mainViewModel.toggleRecipeEditMode() }
                 )
                 Screen.RecipeViewOnlyScreen(context).route -> {}
 
@@ -407,7 +412,9 @@ fun HtmlTextRes(
 fun AddUpdateRecipeTopAppBar(
     navController: NavHostController,
     title: String,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
+    isEditingRecipe: Boolean = false,
+    onToggleEditMode: () -> Unit = {}
 ){
     TopAppBar(
         colors = TopAppBarColors(
@@ -418,10 +425,19 @@ fun AddUpdateRecipeTopAppBar(
             actionIconContentColor = Slate950
         ),
         title = { Text(text = title) },
+        actions = {
+            IconButton(onClick = onToggleEditMode) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = if (isEditingRecipe) "Exit edit mode" else "Edit recipe",
+                    tint = if (isEditingRecipe) Lime600 else Slate950
+                )
+            }
+        },
         navigationIcon = {
             IconButton(
                 onClick = {
-                    if(mainViewModel.changesMade.value){
+                    if(mainViewModel.isDirtyRecipe.value){
                         mainViewModel.setShowExitWithoutSaveAlertDialog(true)
                     }else{
                         navController.navigateUp()

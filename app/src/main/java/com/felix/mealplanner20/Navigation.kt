@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -275,6 +276,13 @@ fun Navigation(
                     val id = if(it.arguments != null) it.arguments!!.getLong(ADD_EDIT_RECIPE_KEY) else 0L
                     val sharedRecipeViewModel = it.sharedViewModel<AddEditRecipeViewModel>(navController)
                     sharedRecipeViewModel.loadRecipe(id,true)
+                    val editModeInitialized = rememberSaveable { mutableStateOf(false) }
+                    LaunchedEffect(editModeInitialized.value) {
+                        if (!editModeInitialized.value) {
+                            mainViewModel.setRecipeEditMode(id == 0L)
+                            editModeInitialized.value = true
+                        }
+                    }
                     AddEditRecipeView(recipeId = id, addEditRecipeViewModel = sharedRecipeViewModel, navController = navController,mainViewModel)
                     mainViewModel.setChangesMade(false)
                     mainViewModel.setCurrentScreen(Screen.AddUpdateRecipeScreen(context))

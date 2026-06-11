@@ -27,6 +27,9 @@ class ShoppingListViewModel @Inject constructor(
     private val _shoppingListItems = MutableStateFlow<List<ShoppingListItemWithIngredient>>(emptyList())
     val shoppingListItems: StateFlow<List<ShoppingListItemWithIngredient>> = _shoppingListItems.asStateFlow()
 
+    private val _showCustomItemInput = MutableStateFlow(false)
+    val showCustomItemInput: StateFlow<Boolean> = _showCustomItemInput.asStateFlow()
+
     init {
         loadShoppingList()
     }
@@ -44,7 +47,7 @@ class ShoppingListViewModel @Inject constructor(
     }
 
     fun deleteItemFromShoppingList(ingredientId: Long) {
-        _shoppingListItems.value.find{ingredientId == ingredientId}?.let {
+        _shoppingListItems.value.find { it.id == ingredientId }?.let {
             _shoppingListItems.value -= it
         }
         viewModelScope.launch {
@@ -55,12 +58,29 @@ class ShoppingListViewModel @Inject constructor(
     fun createShoppingList() {
         viewModelScope.launch {
             try {
-                recipeUseCases.clearShoppingListUseCase()
                 recipeUseCases.createShoppingListUseCase()
-                refresh() // Liste neu laden, um die aktualisierte Liste anzuzeigen
+                refresh()
             } catch (e: Exception) {
                 Log.e("Error", "createShoppingList failed: ${e.message}")
             }
+        }
+    }
+
+    fun toggleCustomItemInput() {
+        _showCustomItemInput.value = !_showCustomItemInput.value
+    }
+
+    fun addCustomItem(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            recipeUseCases.addCustomShoppingListItemUseCase(name.trim())
+            _showCustomItemInput.value = false
+        }
+    }
+
+    fun toggleItemChecked(id: Long, isChecked: Boolean) {
+        viewModelScope.launch {
+            shoppingListRepository.updateCheckedState(id, isChecked)
         }
     }
 

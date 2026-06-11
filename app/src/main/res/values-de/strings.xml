@@ -105,8 +105,10 @@
     <string name="discover">Entdecken</string>
     <string name="search_ingredients">Zutaten suchen</string>
     <string name="no_recipes_info_text">Du hast noch keine eigenen Rezepte....\nfüge gerne welche hinzu</string>
-    <string name="create_list">Liste erstellen</string>
+    <string name="create_list">Aus Mealplan</string>
     <string name="clear_list">Liste löschen</string>
+    <string name="add_custom_item">Artikel hinzufügen</string>
+    <string name="custom_item_placeholder">z.B. Bananen, Spülmittel…</string>
     <string name="advanced_settings">Erweiterte Einstellungen</string>
     <string name="servings">Portionen</string>
     <string name="profile">Profil</string>

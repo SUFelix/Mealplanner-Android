@@ -69,6 +69,8 @@ import com.felix.mealplanner20.ui.theme.Slate200
 import com.felix.mealplanner20.ui.theme.Slate500
 import java.util.Locale
 
+fun Float.toPortionString(): String = if (this % 1f == 0f) toInt().toString() else toString()
+
 @Composable
 fun RecipeViewOnlyView(
     recipeId: Long,
@@ -91,7 +93,7 @@ fun RecipeViewOnlyView(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Slate200)
+            .background(color = MaterialTheme.colorScheme.background)
             .heightIn(max = 4000.dp)
             .verticalScroll(rememberScrollState())
     ){
@@ -103,26 +105,16 @@ fun RecipeViewOnlyView(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
-                    .clip(
-                        RoundedCornerShape(
-                            topStart = 12.dp,  // Oben links abgerundet
-                            topEnd = 12.dp,    // Oben rechts abgerundet
-                            bottomStart = 0.dp, // Unten eckig
-                            bottomEnd = 0.dp   // Unten eckig
-                        )
-                    ),
+                    .wrapContentHeight(),
                 horizontalArrangement = Arrangement.Center
             ){
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         modifier = Modifier
                             .padding(start = 16.dp, end = 16.dp,top = 16.dp, bottom = 8.dp),
-                           // .align(Alignment.CenterVertically),
                         text = recipeViewModel.recipeName.value,
                         style = MaterialTheme.typography.labelMedium.copy(fontSize = 32.sp, fontWeight = FontWeight.Normal)
                     )
-                    GreenDotsRow(5)
                 }
 
             }
@@ -162,7 +154,7 @@ fun CookModeStyledIngredientsBlock(
     val servingsText = if (recipeQuantity == 1f) {
         stringResource(R.string.ingredients_for_1_serving)
     } else {
-        stringResource(R.string.ingredients_for_X_servings, recipeQuantity)
+        stringResource(R.string.ingredients_for_X_servings, recipeQuantity.toPortionString())
     }
 
     val recipeServings  =recipeViewModel.servings
@@ -224,10 +216,7 @@ fun CookModeDescriptionBlock(
     Column(
         modifier = Modifier
             .padding(top = 16.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Slate200)
             .heightIn(max = 4000.dp)
-
     ) {
         descriptionSteps?.forEach{ step ->
                 RecipeDescriptionViewOnlyStep(step.stepNr,step.text,step.imgUri)
@@ -376,6 +365,7 @@ fun IngredientWithQuantityViewOnlyItem(
 @Composable
 fun BigImageWithBackArrow(
     imgUri: Uri? = null,
+    showBackArrow: Boolean = true,
     onArrowClick:()->Unit = {}
 ) {
     val fallbackDrawableId = R.drawable.baseline_fastfood_24
@@ -403,22 +393,24 @@ fun BigImageWithBackArrow(
                 contentScale = ContentScale.Crop
             )
         }
-        IconButton(
-            modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 42.dp)
-                .clip(shape = CircleShape)
-                .background(Slate100),
-            onClick = {onArrowClick()},
-            content = {
-                Image(
-                    painter =  painterResource(R.drawable.arrow_icon),
-                    contentDescription = NAVIGATE_BACK_CONTENT_DESCRIPTION,
-                    modifier = Modifier
-                        .size(48.dp)
-                        .graphicsLayer(scaleX = -1f)
-                )
-            }
-        )
+        if (showBackArrow) {
+            IconButton(
+                modifier = Modifier
+                    .padding(horizontal = 24.dp, vertical = 42.dp)
+                    .clip(shape = CircleShape)
+                    .background(Slate100),
+                onClick = { onArrowClick() },
+                content = {
+                    Image(
+                        painter = painterResource(R.drawable.arrow_icon),
+                        contentDescription = NAVIGATE_BACK_CONTENT_DESCRIPTION,
+                        modifier = Modifier
+                            .size(48.dp)
+                            .graphicsLayer(scaleX = -1f)
+                    )
+                }
+            )
+        }
     }
 }
 

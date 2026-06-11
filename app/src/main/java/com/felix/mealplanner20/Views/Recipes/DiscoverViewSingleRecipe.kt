@@ -219,7 +219,7 @@ fun DiscoverViewSingleRecipe(
                         val portionsText = if (filteredRecipe1.servings == 1f) {
                             stringResource(R.string.ingredients_for_1_serving)
                         } else {
-                            stringResource(R.string.ingredients_for_X_servings, filteredRecipe1.servings)
+                            stringResource(R.string.ingredients_for_X_servings, filteredRecipe1.servings.toPortionString())
                         }
                         IngredientsBlock(portionsText,ingredientsForSingleRecipe,filteredRecipe1)
 

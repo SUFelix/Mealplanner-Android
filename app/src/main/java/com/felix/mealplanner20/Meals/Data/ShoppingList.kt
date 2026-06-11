@@ -14,5 +14,9 @@ data class ShoppingListItem(
     @ColumnInfo(name = "quantity")
     val quantity: Float = 1f,
     @ColumnInfo(name = "unitOfMeasure")
-    val unitOfMeasure: UnitOfMeasure = UnitOfMeasure.GRAM
+    val unitOfMeasure: UnitOfMeasure = UnitOfMeasure.GRAM,
+    @ColumnInfo(name = "isChecked")
+    val isChecked: Boolean = false,
+    @ColumnInfo(name = "customName")
+    val customName: String? = null
 )
