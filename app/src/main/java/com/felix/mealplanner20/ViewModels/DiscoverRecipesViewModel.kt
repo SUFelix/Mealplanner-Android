@@ -236,10 +236,15 @@ class DiscoverRecipesViewModel @Inject constructor (
         }
     }
 
-     fun loadCurrentRecipe(recipeId: Long) {
-            _currentRecipe.value = recipes.value.find { it.id == recipeId }
-         Log.d("CURRENT RECIPE LOAD","${_currentRecipe.value}")
-     }
+    private suspend fun loadCurrentRecipe(recipeId: Long) {
+        val found = recipes.value.find { it.id == recipeId }
+        if (found != null) {
+            _currentRecipe.value = found
+        } else {
+            val fullRecipe = recipeRepository.getFullRecipeById(recipeId)
+            _currentRecipe.value = fullRecipe?.recipe?.toRecipe()
+        }
+    }
     private fun tryLoadFromCache(type: Mealtype?, areAdditional: Boolean): Boolean {
         if (areAdditional) return false
         val snap = DiscoverMemoryCache.get(type) ?: return false

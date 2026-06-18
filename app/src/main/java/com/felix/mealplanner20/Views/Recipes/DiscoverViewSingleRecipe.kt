@@ -1,12 +1,14 @@
 package com.felix.mealplanner20.Views.Recipes
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +31,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.TabRowDefaults.Divider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -197,16 +203,40 @@ fun DiscoverViewSingleRecipe(
                                 color = Slate500
                             )
 
-
-
-                            CustomFullWidthButton(
-                                text = stringResource(R.string.download_recipe),
-                                onClick = {
-                                    discoverRecipesViewModel.downloadRecipe(context = context)
-                                },
-                                buttonColor = Lime600,
-                                textColor = Color.White
-                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    CustomFullWidthButton(
+                                        text = stringResource(R.string.download_recipe),
+                                        onClick = {
+                                            discoverRecipesViewModel.downloadRecipe(context = context)
+                                        },
+                                        buttonColor = Lime600,
+                                        textColor = Color.White
+                                    )
+                                }
+                                IconButton(onClick = {
+                                    val lang = if (isGerman) "de" else "en"
+                                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(
+                                            Intent.EXTRA_TEXT,
+                                            "https://www.mealplannerpro.net/$lang/recipe/$recipeId"
+                                        )
+                                    }
+                                    context.startActivity(Intent.createChooser(shareIntent, null))
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Share,
+                                        contentDescription = if (isGerman) "Teilen" else "Share",
+                                        tint = Slate500
+                                    )
+                                }
+                            }
                         }
                     }
                 }

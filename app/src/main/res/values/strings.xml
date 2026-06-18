@@ -108,7 +108,7 @@
     <string name="discover">Discover</string>
     <string name="search_ingredients">Search Ingredients</string>
     <string name="no_recipes_info_text">You do not have own recipes yet....\nfeel free to add some</string>
-    <string name="create_list">From Meal Plan</string>
+    <string name="create_list">From Plan</string>
     <string name="clear_list">Clear List</string>
     <string name="add_custom_item">Add item</string>
     <string name="custom_item_placeholder">e.g. Bananas, Dish soap…</string>

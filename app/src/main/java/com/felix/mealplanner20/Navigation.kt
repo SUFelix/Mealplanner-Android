@@ -3,14 +3,17 @@ package com.felix.mealplanner20
 import ConfigureMyRecipesProbabilitiesView
 import android.app.Activity
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.core.util.Consumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import com.felix.mealplanner20.Meals.Data.EMPTY_STRING
 import com.felix.mealplanner20.Shopping.ShoppingListView
@@ -78,6 +82,15 @@ fun Navigation(
 ){
     val activity: Activity = LocalContext.current as Activity
     val context = LocalContext.current
+
+    DisposableEffect(navController) {
+        val componentActivity = activity as ComponentActivity
+        val listener = Consumer<android.content.Intent> { intent ->
+            navController.handleDeepLink(intent)
+        }
+        componentActivity.addOnNewIntentListener(listener)
+        onDispose { componentActivity.removeOnNewIntentListener(listener) }
+    }
 
     val currentScreen = remember { mutableStateOf<Screen>(Screen.BottomScreen.CatalogScreen(context)) }
     val navigationEventChannel = remember { Channel<NavigationEvent>(Channel.BUFFERED) }
@@ -154,6 +167,10 @@ fun Navigation(
                         nullable = false
                         defaultValue = 0L
                     }
+                ),
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "https://www.mealplannerpro.net/de/recipe/{$SHOW_RECIPE_ARGUMENT_KEY}" },
+                    navDeepLink { uriPattern = "https://www.mealplannerpro.net/en/recipe/{$SHOW_RECIPE_ARGUMENT_KEY}" }
                 )
             ){ backStackEntry ->
                 val recipeId = backStackEntry.arguments?.getLong(SHOW_RECIPE_ARGUMENT_KEY) ?: 0L
