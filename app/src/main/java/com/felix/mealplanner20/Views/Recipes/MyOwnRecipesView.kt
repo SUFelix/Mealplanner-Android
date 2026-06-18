@@ -322,7 +322,7 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
                 }
                 else{
                    Image(
-                       painter = painterResource(id = R.drawable.shake2240),
+                       painter = painterResource(id = R.drawable.apfelkarottestableassistand),
                        contentDescription = "Dummy Image",
                        modifier = Modifier
                            .fillMaxWidth()

@@ -368,7 +368,7 @@ fun BigImageWithBackArrow(
     showBackArrow: Boolean = true,
     onArrowClick:()->Unit = {}
 ) {
-    val fallbackDrawableId = R.drawable.baseline_fastfood_24
+    val fallbackDrawableId =  R.drawable.apfelkarottestableassistand
 
     Box(
         modifier = Modifier
