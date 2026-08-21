@@ -70,8 +70,11 @@
     <string name="description">Beschreibung</string>
     <string name="nutri_stats">Nutri-Stats</string>
     <string name="dge_compliance">DGE Konformität</string>
-    <string name="macro_compliance">Macro Konformität</string>
     <string name="compliance">Konformität</string>
+    <string name="plants_this_week">Pflanzen diese Woche</string>
+    <string name="plants_dialog_title">Diese Woche gezählte Pflanzen</string>
+    <string name="view_plant_list">Liste anzeigen</string>
+    <string name="close">Schließen</string>
     <string name="quality">Qualität</string>
     <string name="nutrition">Nahrungs-</string>
     <string name="fat_per_day">Fett pro Tag</string>

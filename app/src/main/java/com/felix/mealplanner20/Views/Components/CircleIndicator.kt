@@ -74,9 +74,10 @@ fun CircleIndicator(
     maxIndicatorValue:Int = 100,
     backgroundIndicatorColor: Color = light_grey,
     backgroundIndicatorStrokeWidth:Float = 32f,
-    foregroundIndicatorColor: Color = getColorFromIndicatorValue(indicatorValue),
+    foregroundIndicatorColor: Color = getColorFromIndicatorValue(((indicatorValue.toFloat() / maxIndicatorValue) * 100).toInt()),
     foregroundIndicatorStrokeWidth:Float = 32f,
-    bigTextColor: Color = foregroundIndicatorColor
+    bigTextColor: Color = foregroundIndicatorColor,
+    badgeText: String = stringResource(R.string.nutrition_score)
 )
 {
     var animatedIndicatorValue by remember { mutableStateOf(0f) }
@@ -123,7 +124,8 @@ fun CircleIndicator(
                 .height(33.dp)
                 .clip(RoundedCornerShape(16.dp))
                 .align(Alignment.BottomCenter)
-                .background(color = Slate950.copy(alpha = 0.65f))
+                .background(color = Slate950.copy(alpha = 0.65f)),
+            text = badgeText
         )
     }
 }

@@ -62,7 +62,10 @@
     <string name="description">Description</string>
     <string name="nutri_stats">Nutri Stats</string>
     <string name="dge_compliance">conformité DGE</string>
-    <string name="macro_compliance">conformité macro</string>
+    <string name="plants_this_week">Plantes cette semaine</string>
+    <string name="plants_dialog_title">Plantes comptées cette semaine</string>
+    <string name="view_plant_list">Voir la liste</string>
+    <string name="close">Fermer</string>
     <string name="compliance">Conformité</string>
     <string name="quality">Qualité</string>
     <string name="nutrition">Nutrition</string>

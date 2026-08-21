@@ -57,6 +57,19 @@ data class Ingredient(
             else -> true
         }
     }
+
+    fun isPlant():Boolean{
+        return when(dgeType){
+            dgeGroup.OIL -> true
+            dgeGroup.WHOLEGRAIN -> true
+            dgeGroup.POTATO -> true
+            dgeGroup.FRUIT -> true
+            dgeGroup.VEGETABLE -> true
+            dgeGroup.LEGUME -> true
+            dgeGroup.NUTSANDSEEDS -> true
+            else -> false
+        }
+    }
 }
 
 

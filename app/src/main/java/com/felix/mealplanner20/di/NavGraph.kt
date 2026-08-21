@@ -34,7 +34,7 @@ import com.felix.mealplanner20.use_cases.AreAllIngredientsVeganUseCase
 import com.felix.mealplanner20.use_cases.AreAllIngredientsVegetarianUseCase
 import com.felix.mealplanner20.use_cases.CalculateCPFratioUseCase
 import com.felix.mealplanner20.use_cases.CalculateCaloriesUseCase
-import com.felix.mealplanner20.use_cases.CalculateNutritionQualityUseCase
+import com.felix.mealplanner20.use_cases.CalculatePlantMetricUseCase
 import com.felix.mealplanner20.use_cases.CalculateTotalCaloriesForIngredientWithRecipeListUseCase
 import com.felix.mealplanner20.use_cases.CleanUnusedRecipeImagesUseCase
 import com.felix.mealplanner20.use_cases.AddCustomShoppingListItemUseCase
@@ -462,8 +462,8 @@ object NavGraph {
     }
     @Provides
     @Singleton
-    fun providecalculateNutritionQualityUseCase(nutritionUseCases: NutritionBasicUseCases):CalculateNutritionQualityUseCase{
-        return CalculateNutritionQualityUseCase(nutritionUseCases)
+    fun providecalculatePlantMetricUseCase():CalculatePlantMetricUseCase{
+        return CalculatePlantMetricUseCase()
     }
     @Provides
     @Singleton

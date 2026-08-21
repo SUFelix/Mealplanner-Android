@@ -73,8 +73,11 @@
     <string name="list2shop">List2Shop</string>
     <string name="per_day">per day</string>
     <string name="dge_compliance">DGE compliance</string>
-    <string name="macro_compliance">Macro compliance</string>
     <string name="compliance">compliance</string>
+    <string name="plants_this_week">Plants this week</string>
+    <string name="plants_dialog_title">Plants counted this week</string>
+    <string name="view_plant_list">View list</string>
+    <string name="close">Close</string>
     <string name="quality">Quality</string>
     <string name="nutrition">Nutrition</string>
     <string name="fat_per_day">Fat per day</string>
