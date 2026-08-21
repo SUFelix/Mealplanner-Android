@@ -16,8 +16,8 @@ android {
         applicationId = "com.felix.mealplanner20"
         minSdk = 28
         targetSdk = 36
-        versionCode = 13
-        versionName = "1.8.7"
+        versionCode = 14
+        versionName = "1.8.8"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
