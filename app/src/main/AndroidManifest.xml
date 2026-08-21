@@ -16,7 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher_circle_black_pot"
         android:supportsRtl="true"
         android:theme="@style/Theme.MealPlanner20"
-        tools:targetApi="31">
+        tools:targetApi="36">
         <activity
             android:exported="true"
             android:launchMode="singleTop"
