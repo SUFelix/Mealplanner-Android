@@ -676,9 +676,9 @@ class AddEditRecipeViewModel @Inject constructor(
         val newRecipeDescriptionStep = RecipeDescription(
             recipeId = recipeId.toInt(),
             stepNr = getNextDescriptionStepNumber(),
-            text = "Beschreibung...",
-            englishText = "Description...",
-            germanText = "Beschreibung...",
+            text = "",
+            englishText = "",
+            germanText = "",
             imgUri = null
         )
 

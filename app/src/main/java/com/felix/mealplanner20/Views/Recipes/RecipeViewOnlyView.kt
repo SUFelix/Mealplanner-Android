@@ -216,7 +216,6 @@ fun CookModeDescriptionBlock(
     Column(
         modifier = Modifier
             .padding(top = 16.dp)
-            .heightIn(max = 4000.dp)
     ) {
         descriptionSteps?.forEach{ step ->
                 RecipeDescriptionViewOnlyStep(step.stepNr,step.text,step.imgUri)
