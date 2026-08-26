@@ -339,7 +339,7 @@ class AddEditRecipeViewModel @Inject constructor(
                     uomEnum?.let { it to au.gramsPerUnit }
                 }
                 _allowedUnitsForIngredients.value =
-                    _allowedUnitsForIngredients.value + (matchedId to mappedUnits)
+                    _allowedUnitsForIngredients.value + (matchedId to withGramGuaranteed(mappedUnits))
 
                 val parsedUnit = parseWizardUnit(item.unit)
                 val finalUnit = when {
@@ -563,13 +563,21 @@ class AddEditRecipeViewModel @Inject constructor(
                 }
 
                 // Map updaten
-                _allowedUnitsForIngredients.value = _allowedUnitsForIngredients.value + (ingredientId to mappedUnits)
+                _allowedUnitsForIngredients.value = _allowedUnitsForIngredients.value + (ingredientId to withGramGuaranteed(mappedUnits))
             } catch (e: Exception) {
                 Log.e("AddEditRecipeVM", "Fehler beim Laden der AllowedUnits für Ingredient $ingredientId", e)
             }
         }
     }
 
+    // GRAM is the unit everything is internally normalized to (ingredientQuantity is always
+    // stored in grams), so it must always be selectable in the unit dropdown even if an
+    // ingredient's admin-curated allowed-units list doesn't explicitly list it - otherwise a
+    // user who switches away from GRAM (e.g. to PIECE) has no way back.
+    private fun withGramGuaranteed(units: List<Pair<UnitOfMeasure, Float>>): List<Pair<UnitOfMeasure, Float>> {
+        return if (units.any { it.first == UnitOfMeasure.GRAM }) units
+        else listOf(UnitOfMeasure.GRAM to 1f) + units
+    }
 
     private fun updateDescriptionStep(step: RecipeDescription) {
         _recipeDescriptionSteps.value = _recipeDescriptionSteps.value?.map {
