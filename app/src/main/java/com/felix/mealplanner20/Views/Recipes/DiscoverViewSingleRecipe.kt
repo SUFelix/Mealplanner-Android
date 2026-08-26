@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -82,7 +83,8 @@ import java.util.Locale
 fun DiscoverViewSingleRecipe(
     recipeId:Long,
     discoverRecipesViewModel: DiscoverRecipesViewModel,
-    mainViewModel: MainViewModel
+    mainViewModel: MainViewModel,
+    onUsernameClick: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
 
@@ -192,7 +194,10 @@ fun DiscoverViewSingleRecipe(
 
                             Text(
                                 modifier = Modifier.padding(end = 12.dp)
-                                    .align(Alignment.CenterHorizontally),
+                                    .align(Alignment.CenterHorizontally)
+                                    .clickable(enabled = !filteredRecipe1.createdBy.isNullOrBlank()) {
+                                        filteredRecipe1.createdBy?.let { onUsernameClick(it) }
+                                    },
 
                                 text = if (isGerman) {
                                     "von ${filteredRecipe1.createdBy}"

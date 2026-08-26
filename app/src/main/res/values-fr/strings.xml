@@ -133,6 +133,13 @@
     <string name="servings">Portions</string>
     <string name="profile">Profil</string>
     <string name="edit_profile">Modifier le profil</string>
+    <string name="no_profile_description">Cet utilisateur n\'a pas encore écrit de description.</string>
+    <string name="public_profile_not_found">Ce profil est introuvable.</string>
+    <string name="public_profile_no_recipes">Cet utilisateur n\'a pas encore publié de recettes.</string>
+    <plurals name="public_profile_recipe_count">
+        <item quantity="one">%1$d Recette</item>
+        <item quantity="other">%1$d Recettes</item>
+    </plurals>
     <string name="probability">Probabilité</string>
     <string name="meals">Repas</string>
     <string name="breakfasts">Petits-déjeuners</string>

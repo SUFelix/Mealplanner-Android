@@ -556,6 +556,15 @@ class RecipeRepository @Inject constructor(
     suspend fun setCreatedBy(localId: Long, createdBy: String?) {
         recipeDao.setCreatedBy(localId, createdBy)
     }
+
+    suspend fun getRecipesForUserFromServer(username: String): List<Recipe>? {
+        return try {
+            recipeApiService.fetchRecipesByUsername(username).map { it.toRecipe() }
+        } catch (e: Exception) {
+            Log.e("RecipeRepository", "Error fetching recipes for user $username from server", e)
+            null
+        }
+    }
 }
 
 

@@ -146,6 +146,13 @@
     <string name="servings">Servings</string>
     <string name="profile">Profile</string>
     <string name="edit_profile">Edit Profile</string>
+    <string name="no_profile_description">This user has not written a bio yet.</string>
+    <string name="public_profile_not_found">This profile could not be found.</string>
+    <string name="public_profile_no_recipes">This user has not published any recipes yet.</string>
+    <plurals name="public_profile_recipe_count">
+        <item quantity="one">%1$d Recipe</item>
+        <item quantity="other">%1$d Recipes</item>
+    </plurals>
     <string name="probability">Probability</string>
     <string name="meals">Meals</string>
     <string name="breakfasts">Breakfasts</string>

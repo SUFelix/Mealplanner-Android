@@ -261,6 +261,12 @@ fun MainView (){
                         navController.navigateUp()
                     }
                 )
+                Screen.PublicProfileScreen(context).route ->BackArrowTopAppBar(
+                    title =  mainViewModel.currentTopAppBarTitle.value,
+                    onBackArrowClick = {
+                        navController.navigateUp()
+                    }
+                )
                 Screen.BottomScreen.NutritionCockpitScreen(context).route -> NutriScoreInfoTopAppBar(
                     title = title.value,
                 )

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -128,39 +129,39 @@ fun MealPlan(
             )
         }
 
-        LazyColumn {
-            itemsIndexed(
-                items = mealPlanList.value,
-                key = { _,item -> item.id }
-            ) { index, item ->
-                SingleDayPart(
-                    mealPlanDay = item,
-                    navController = navController,
-                    mealplanViewModel = mealPlanViewModel,
-                    recipeCaloriesMap = recipeCaloriesMap,
-                    dayNumber = index + 1
-                )
-            }
-
-            item {
-                Box(
-                    modifier = Modifier
-                        .height(80.dp)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.CenterEnd
-                ){
-                    CustomButton(
-                        text = stringResource(R.string.create_mealplan),
-                        onClick = {   showGenerateMealplanAlertDialog = true },
-                        textColor = Color.White,
-                        buttonColor = Lime600,
-                        borderColor = Slate950,
-                        modifier = Modifier
-                            .wrapContentWidth()
-                            .height(50.dp)
-                            .padding(end = 16.dp)
+        Column(modifier = Modifier.fillMaxSize()) {
+            LazyRow(modifier = Modifier.weight(1f)) {
+                itemsIndexed(
+                    items = mealPlanList.value,
+                    key = { _,item -> item.id }
+                ) { index, item ->
+                    SingleDayPart(
+                        mealPlanDay = item,
+                        navController = navController,
+                        mealplanViewModel = mealPlanViewModel,
+                        recipeCaloriesMap = recipeCaloriesMap,
+                        dayNumber = index + 1
                     )
                 }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp),
+                contentAlignment = Alignment.CenterEnd
+            ){
+                CustomButton(
+                    text = stringResource(R.string.create_mealplan),
+                    onClick = {   showGenerateMealplanAlertDialog = true },
+                    textColor = Color.White,
+                    buttonColor = Lime600,
+                    borderColor = Slate950,
+                    modifier = Modifier
+                        .wrapContentWidth()
+                        .height(50.dp)
+                        .padding(end = 16.dp)
+                )
             }
         }
     }
@@ -195,54 +196,46 @@ fun SingleDayPart(
     }.toInt()
 
 
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .wrapContentHeight()) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 8.dp, top = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ){
-                Text(
-                    modifier = Modifier.padding(start = 16.dp),
-                    text = stringResource(R.string.day)+" "+dayNumber,
-                    style = MaterialTheme.typography.titleLarge.copy(color = Slate500)
+    Column(
+        modifier = Modifier
+            .width(190.dp)
+            .fillMaxHeight()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp)
+                .padding(bottom = 8.dp, top = 24.dp)
+        ){
+            Text(
+                text = stringResource(R.string.day)+" "+dayNumber,
+                style = MaterialTheme.typography.titleLarge.copy(color = Slate500)
+            )
+            Text(
+                text = "${totalCalories} kCal",
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            itemsIndexed(recipeQuantities, key = { _, item -> item.recipeId }) { _, recipeQuantity ->
+                val recipe = recipeItems.find { it.id == recipeQuantity.recipeId }
 
-                )
-
-                Text(
-                    modifier = Modifier
-                        .padding(end = 8.dp)
-                        .align(Alignment.Bottom),
-                    text = "${totalCalories} kCal",
-                    style = MaterialTheme.typography.titleLarge
-                )
+                recipe?.let {
+                    OneMealLazyRowItem(
+                        recipeTitle = it.title,
+                        recipeId = it.id,
+                        mealPlanDayId = mealPlanDay.id,
+                        recipesIdsWithQuantity = recipeQuantity,
+                        navController = navController,
+                        mealPlanViewModel = mealplanViewModel
+                    )
+                }
             }
-            LazyRow {
-                itemsIndexed(recipeQuantities, key = { _, item -> item.recipeId }) { index, recipeQuantity ->
-                    val recipe = recipeItems.find { it.id == recipeQuantity.recipeId }
-                    val isFirst = (index == 0)
-
-                    recipe?.let {
-                        OneMealLazyRowItem(
-                            recipeTitle = it.title,
-                            recipeId = it.id,
-                            mealPlanDayId = mealPlanDay.id,
-                            recipesIdsWithQuantity = recipeQuantity,
-                            navController = navController,
-                            mealPlanViewModel = mealplanViewModel,
-                            isFirst = isFirst
-                        )
-                    }
-                }
-                item {
-                    val context = LocalContext.current
-                    DashedAddButton(onClick = {
-                        navController.navigate(Screen.AddMealPlanRecipeScreen(context).passId(mealPlanDay.id))
-                    })
-                }
+            item {
+                val context = LocalContext.current
+                DashedAddButton(onClick = {
+                    navController.navigate(Screen.AddMealPlanRecipeScreen(context).passId(mealPlanDay.id))
+                })
             }
         }
     }
@@ -252,9 +245,9 @@ fun SingleDayPart(
 fun DashedAddButton(onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .padding(4.dp)
-            .width(182.dp)
-            .height(276.5.dp)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .width(174.dp)
+            .height(202.dp)
             .clickable { onClick() }
             .clip(RoundedCornerShape(12.dp))
     ) {
@@ -326,8 +319,7 @@ fun IconWithNumberBadge(
      mealPlanDayId:Long,
      recipesIdsWithQuantity: RecipeQuantity,
      navController: NavController,
-     mealPlanViewModel: MealPlanViewModel,
-     isFirst:Boolean=false
+     mealPlanViewModel: MealPlanViewModel
  ) {
 
      val context = LocalContext.current
@@ -350,8 +342,8 @@ fun IconWithNumberBadge(
 
      Card(
          modifier = Modifier
-             .padding(start = if (isFirst) 12.dp else 4.dp, end = 4.dp, top = 4.dp)
-             .width(182.dp)
+             .padding(horizontal = 8.dp, vertical = 4.dp)
+             .width(174.dp)
              .height(202.dp)
              .clickable { showItemOptionsDialog = true }
              .clip(RoundedCornerShape(12.dp))
@@ -480,8 +472,7 @@ fun OneMealLazyRowItemPreview() {
         mealPlanDayId = 1L,
         recipesIdsWithQuantity = RecipeQuantity(1L, 2f),
         navController = navController,
-        mealPlanViewModel = mealPlanViewModel,
-        isFirst = true
+        mealPlanViewModel = mealPlanViewModel
     )
 }
 

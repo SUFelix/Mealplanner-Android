@@ -8,7 +8,9 @@ import com.felix.mealplanner20.ImageUpDownLoad
 import com.felix.mealplanner20.Meals.Data.helpers.uriToByteArray
 import com.felix.mealplanner20.apiService.ImageUriRequest
 import com.felix.mealplanner20.apiService.ProfileApiService
+import com.felix.mealplanner20.apiService.PublicProfileDTO
 import com.felix.mealplanner20.use_cases.IMAGE_METADATA_CODE
+import com.google.gson.Gson
 import retrofit2.Response
 import javax.inject.Inject
 
@@ -88,5 +90,35 @@ class ProfileRepository @Inject constructor(
             Log.e("ERROR",e.stackTraceToString())
             return null
         }
+    }
+
+    suspend fun getPublicProfile(username: String): PublicProfileDTO? {
+        return try {
+            profileApiService.getPublicProfile(username)
+                ?.let { it.copy(description = sanitizeDescription(it.description)) }
+        } catch (e: Exception) {
+            Log.e("ProfileRepository", "Error fetching public profile for $username", e)
+            null
+        }
+    }
+
+    // Der Server liefert die Beschreibung teils doppelt JSON-kodiert
+    // (umschließende Anführungszeichen, literale "\n" statt echter Zeilenumbrüche).
+    private fun sanitizeDescription(raw: String?): String? {
+        if (raw.isNullOrBlank()) return raw
+        var current = raw.trim()
+        repeat(2) {
+            if (current.length >= 2 && current.startsWith("\"") && current.endsWith("\"")) {
+                current = try {
+                    Gson().fromJson(current, String::class.java) ?: current
+                } catch (e: Exception) {
+                    current.removeSurrounding("\"")
+                }
+            }
+        }
+        return current
+            .replace("\\r\\n", "\n")
+            .replace("\\n", "\n")
+            .replace("\\\"", "\"")
     }
 }

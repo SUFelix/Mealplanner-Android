@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.HeaderMap
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface ProfileApiService {
     @POST("profile/description")
@@ -31,9 +32,23 @@ interface ProfileApiService {
         @HeaderMap headers: Map<String, String>
     ): EmailResponse?
 
+    @GET("users/{username}")
+    suspend fun getPublicProfile(
+        @Path("username") username: String
+    ): PublicProfileDTO?
+
 }
 @Serializable
 data class ImageUriRequest(val uri: String)
 
 @Serializable
 data class EmailResponse(val email: String)
+
+@Serializable
+data class PublicProfileDTO(
+    val username: String,
+    val pictureUri: String?,
+    val description: String?,
+    val recipeIds: List<Long>,
+    val recipeCount: Int
+)

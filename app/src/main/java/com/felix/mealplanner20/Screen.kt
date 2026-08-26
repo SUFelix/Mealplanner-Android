@@ -1,6 +1,7 @@
 package com.felix.mealplanner20
 
 import android.content.Context
+import android.net.Uri
 import androidx.annotation.DrawableRes
 
 const val ADD_SCREEN_ARGUMENT_KEY = "id"
@@ -10,6 +11,7 @@ const val ADD_SCREEN_CORE_ROUTE = "add_screen/"
 const val REPLACE_RECIPE_ARGUMENT_KEY = "recipeId"
 const val SHOW_RECIPE_ARGUMENT_KEY = "recipeId"
 const val MEALPLANDAYID_ARGUMENT_KEY = "mealPlanDayId"
+const val PUBLIC_PROFILE_ARGUMENT_KEY = "username"
 
 const val NUTRITION_COCKPIT_TEST_TAG = "nutritioncockpit_screen"
 const val MEALPLAN_TEST_TAG = "mealplan_screen"
@@ -79,6 +81,15 @@ sealed class Screen(var title:String,val route:String){
         companion object
         fun passId(recipeId:Long):String{
             return "discover_recipes_single_view_screen/$recipeId"
+        }
+    }
+    class PublicProfileScreen(context: Context):Screen(
+        title = context.getString(R.string.profile),
+        route = "public_profile_screen/{$PUBLIC_PROFILE_ARGUMENT_KEY}"
+    ){
+        companion object
+        fun passUsername(username:String):String{
+            return "public_profile_screen/${Uri.encode(username)}"
         }
     }
     class RecipeViewOnlyScreenWithOutMealplan(context: Context):Screen(

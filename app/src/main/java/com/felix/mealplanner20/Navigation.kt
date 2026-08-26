@@ -53,6 +53,7 @@ import com.felix.mealplanner20.Views.Mealplan.ReplaceMealPlanRecipeView
 import com.felix.mealplanner20.Views.NutritionDashboard
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.LoginView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ProfileView
+import com.felix.mealplanner20.Views.ProfileSettingsLogin.PublicProfileView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ResetPasswordConfirmView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ResetPasswordRequestView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.SignUpView
@@ -184,7 +185,29 @@ fun Navigation(
                 DiscoverViewSingleRecipe(
                     recipeId =recipeId,
                     discoverRecipesViewModel = discoverRecipesViewModel,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    onUsernameClick = { username ->
+                        navController.navigate(Screen.PublicProfileScreen(context).passUsername(username))
+                    }
+                )
+            }
+            composable(
+                route = Screen.PublicProfileScreen(context).route,
+                arguments = listOf(
+                    navArgument(PUBLIC_PROFILE_ARGUMENT_KEY) {
+                        type = NavType.StringType
+                        nullable = false
+                    }
+                )
+            ) { backStackEntry ->
+                val username = backStackEntry.arguments?.getString(PUBLIC_PROFILE_ARGUMENT_KEY) ?: EMPTY_STRING
+
+                mainViewModel.setCurrentTopAppBarTitle(username)
+                mainViewModel.setCurrentScreen(Screen.PublicProfileScreen(context))
+
+                PublicProfileView(
+                    username = username,
+                    navController = navController
                 )
             }
             navigation(

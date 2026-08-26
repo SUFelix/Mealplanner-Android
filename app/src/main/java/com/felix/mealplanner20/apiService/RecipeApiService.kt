@@ -63,6 +63,11 @@ interface RecipeApiService {
         @HeaderMap headers: Map<String, String>
     ): Response<ResponseBody>
 
+    @GET("users/{username}/recipes")
+    suspend fun fetchRecipesByUsername(
+        @Path("username") username: String
+    ): List<RecipeDTO>
+
 }
 
 @Serializable
