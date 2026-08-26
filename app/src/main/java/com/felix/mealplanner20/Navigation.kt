@@ -33,6 +33,8 @@ import com.felix.mealplanner20.Shopping.ShoppingListViewModel
 import com.felix.mealplanner20.ViewModels.AddEditRecipeViewModel
 import com.felix.mealplanner20.ViewModels.DiscoverRecipesViewModel
 import com.felix.mealplanner20.ViewModels.FeedbackViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminAllowedUnitViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminReviewViewModel
 import com.felix.mealplanner20.ViewModels.IngredientViewModel
 import com.felix.mealplanner20.ViewModels.MainViewModel
 import com.felix.mealplanner20.ViewModels.MealPlanViewModel
@@ -43,6 +45,7 @@ import com.felix.mealplanner20.ViewModels.RecipeCatalogViewModel
 import com.felix.mealplanner20.ViewModels.SettingsViewModel
 import com.felix.mealplanner20.ViewModels.SignInViewModel
 import com.felix.mealplanner20.Views.AddEditIngredientView
+import com.felix.mealplanner20.Views.FoodAdminReviewView
 import com.felix.mealplanner20.Views.IngredientHomeView
 import com.felix.mealplanner20.Views.Mealplan.AddMealPlanRecipeView
 import com.felix.mealplanner20.Views.Mealplan.MealPlan
@@ -203,6 +206,9 @@ fun Navigation(
                         onAdvancedSettingsClick = {
                             navController.navigate(Screen.ConfigProbabilitiesScreen(context).route)
                         },
+                        onFoodAdminClick = {
+                            navController.navigate(Screen.FoodAdminReviewScreen(context).route)
+                        },
                         onDreiPunkteClick = {
                             navController.navigate(Screen.TopAppBarScreen.SendFeedback(context).route)
                         },
@@ -220,6 +226,16 @@ fun Navigation(
 
                     ConfigureMyRecipesProbabilitiesView(recipeCatalogViewModel = sharedRecipeCatalogViewModel)
                     mainViewModel.setCurrentScreen(Screen.ConfigProbabilitiesScreen(context))
+                }
+
+                composable(route = Screen.FoodAdminReviewScreen(context).route){
+                    val foodAdminReviewViewModel: FoodAdminReviewViewModel = hiltViewModel()
+                    val foodAdminAllowedUnitViewModel: FoodAdminAllowedUnitViewModel = hiltViewModel()
+                    FoodAdminReviewView(
+                        foodAdminReviewViewModel = foodAdminReviewViewModel,
+                        foodAdminAllowedUnitViewModel = foodAdminAllowedUnitViewModel
+                    )
+                    mainViewModel.setCurrentScreen(Screen.FoodAdminReviewScreen(context))
                 }
                 composable(
                     route = Screen.Login(context).route

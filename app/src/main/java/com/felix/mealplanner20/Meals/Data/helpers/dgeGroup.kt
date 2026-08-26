@@ -15,6 +15,7 @@ enum class dgeGroup {
     NUTSANDSEEDS,
     OTHER,
     OTHERVEGAN,
-    OTHERVEGETARIAN
+    OTHERVEGETARIAN,
+    SPICE
 }
 

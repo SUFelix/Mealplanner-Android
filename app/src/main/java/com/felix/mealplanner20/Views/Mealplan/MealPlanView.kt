@@ -80,6 +80,7 @@ import com.felix.mealplanner20.ViewModels.RecipeCatalogViewModel
 import com.felix.mealplanner20.Views.Components.MyCircularProgressIndicator
 import com.felix.mealplanner20.Views.Components.CustomButton
 import com.felix.mealplanner20.Views.Components.CustomFullWidthButton
+import com.felix.mealplanner20.Views.Components.RECIPE_MAIN_IMAGE_ASPECT_RATIO
 import com.felix.mealplanner20.ui.theme.Lime600
 import com.felix.mealplanner20.ui.theme.Slate200
 import com.felix.mealplanner20.ui.theme.Slate300
@@ -351,7 +352,7 @@ fun IconWithNumberBadge(
          modifier = Modifier
              .padding(start = if (isFirst) 12.dp else 4.dp, end = 4.dp, top = 4.dp)
              .width(182.dp)
-             .height(276.5.dp)
+             .height(202.dp)
              .clickable { showItemOptionsDialog = true }
              .clip(RoundedCornerShape(12.dp))
              .background(Color.White),
@@ -373,7 +374,7 @@ fun IconWithNumberBadge(
                      contentDescription = "Dummy Image",
                      modifier = Modifier
                          .fillMaxWidth()
-                         .aspectRatio(1f)
+                         .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                          .padding(if (textLineCount > 1) 0.dp else 4.dp)
                          .clip(RoundedCornerShape(8.dp)),
                      contentScale = ContentScale.Crop
@@ -388,7 +389,7 @@ fun IconWithNumberBadge(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .width(182.dp)
-                        .height(195.5.dp)
+                        .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(8.dp))
                 )

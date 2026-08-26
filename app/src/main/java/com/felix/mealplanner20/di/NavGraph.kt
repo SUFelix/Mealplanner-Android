@@ -44,6 +44,13 @@ import com.felix.mealplanner20.use_cases.DeleteIngredientFromRecipeUseCase
 import com.felix.mealplanner20.use_cases.DeleteOneItemFromShoppingListUseCase
 import com.felix.mealplanner20.use_cases.DeleteRecipeByIdUseCase
 import com.felix.mealplanner20.use_cases.DownloadRecipeUseCase
+import com.felix.mealplanner20.use_cases.ApproveAllowedUnitUseCase
+import com.felix.mealplanner20.use_cases.ApproveIngredientUseCase
+import com.felix.mealplanner20.use_cases.GetIngredientByIdUseCase
+import com.felix.mealplanner20.use_cases.GetPendingAllowedUnitsUseCase
+import com.felix.mealplanner20.use_cases.GetPendingIngredientsUseCase
+import com.felix.mealplanner20.use_cases.RejectAllowedUnitUseCase
+import com.felix.mealplanner20.use_cases.RejectIngredientUseCase
 import com.felix.mealplanner20.use_cases.GetAllIngredientsForOneRecipeUseCase
 import com.felix.mealplanner20.use_cases.GetDayDetailsUseCase
 import com.felix.mealplanner20.use_cases.GetDgeRecommendationDataUseCase
@@ -89,7 +96,8 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 
-const val BASE_URL = "https://www.mealplannerpro.net/"
+//const val BASE_URL = "https://www.mealplannerpro.net/"
+const val BASE_URL = "http://192.168.0.95:8080/"
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -333,6 +341,61 @@ object NavGraph {
         return UploadUpdateIngredientUseCase(ingredientRepository,authRepository)
     }
 
+    @Provides
+    @Singleton
+    fun provideGetPendingIngredientsUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): GetPendingIngredientsUseCase {
+        return GetPendingIngredientsUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideApproveIngredientUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): ApproveIngredientUseCase {
+        return ApproveIngredientUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideRejectIngredientUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): RejectIngredientUseCase {
+        return RejectIngredientUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideGetIngredientByIdUseCase(
+        ingredientRepository: IngredientRepository
+    ): GetIngredientByIdUseCase {
+        return GetIngredientByIdUseCase(ingredientRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideGetPendingAllowedUnitsUseCase(
+        ingredientAllowedUnitApiService: IngredientAllowedUnitApiService,
+        authRepository: AuthRepository
+    ): GetPendingAllowedUnitsUseCase {
+        return GetPendingAllowedUnitsUseCase(ingredientAllowedUnitApiService, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideApproveAllowedUnitUseCase(
+        ingredientAllowedUnitApiService: IngredientAllowedUnitApiService,
+        authRepository: AuthRepository
+    ): ApproveAllowedUnitUseCase {
+        return ApproveAllowedUnitUseCase(ingredientAllowedUnitApiService, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideRejectAllowedUnitUseCase(
+        ingredientAllowedUnitApiService: IngredientAllowedUnitApiService,
+        authRepository: AuthRepository
+    ): RejectAllowedUnitUseCase {
+        return RejectAllowedUnitUseCase(ingredientAllowedUnitApiService, authRepository)
+    }
     @Provides
     @Singleton
     fun provideSyncronzieIngredientsUseCase(

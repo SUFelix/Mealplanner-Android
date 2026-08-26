@@ -25,4 +25,22 @@ interface IngredientApiService {
         @Body ingredient: IngredientDTO,
         @HeaderMap headers: Map<String, String>
     ): Response<Unit>
+
+    @GET("ingredients/{id}")
+    suspend fun getIngredientById(@Path("id") id: Long): IngredientDTO
+
+    @GET("ingredients/review")
+    suspend fun getPendingIngredients(@HeaderMap headers: Map<String, String>): List<IngredientDTO>
+
+    @POST("ingredients/review/{id}/approve")
+    suspend fun approveIngredient(
+        @Path("id") id: Long,
+        @HeaderMap headers: Map<String, String>
+    ): Response<Unit>
+
+    @POST("ingredients/review/{id}/reject")
+    suspend fun rejectIngredient(
+        @Path("id") id: Long,
+        @HeaderMap headers: Map<String, String>
+    ): Response<Unit>
 }

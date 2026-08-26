@@ -224,8 +224,8 @@ class IngredientViewModel @Inject constructor (
         isRefreshing.update { true }
         viewModelScope.launch(Dispatchers.IO) {
             uploadUpdateIngredientUseCase.execute(ingredient)
-            // plantGroupKey is local-only curation - the server DTO doesn't carry it, so it must
-            // be persisted to Room directly rather than relying on the next sync round-trip.
+            // Persist to Room directly so the edit (including plantGroupKey) is reflected
+            // immediately rather than waiting for the next sync round-trip.
             ingredientRepository.updateIngredient(ingredient)
             ingredientRepository.getAllIngredients()
             isRefreshing.update { false }

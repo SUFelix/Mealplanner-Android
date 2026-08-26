@@ -96,6 +96,12 @@ sealed class Screen(var title:String,val route:String){
     ){
         companion object
     }
+    class FoodAdminReviewScreen(context: Context) : Screen(
+        title = context.getString(R.string.food_admin_review),
+        route ="food_admin_review_screen"
+    ){
+        companion object
+    }
     class Login(context: Context):Screen("Login","login_screen"){
         companion object
     }

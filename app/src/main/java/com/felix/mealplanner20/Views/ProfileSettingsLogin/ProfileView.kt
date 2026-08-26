@@ -80,6 +80,7 @@ import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
 import com.felix.mealplanner20.Meals.Data.EMPTY_STRING
 import com.felix.mealplanner20.Meals.Data.helpers.MORE_VERT_CONTENT_DESCRIPTION
+import com.felix.mealplanner20.Meals.Data.helpers.UserRoles
 import com.felix.mealplanner20.R
 import com.felix.mealplanner20.ViewModels.ProfileViewModel
 import com.felix.mealplanner20.ViewModels.SettingsViewModel
@@ -111,6 +112,7 @@ fun ProfileView(
     onSignUpClick:()->Unit,
     onSignInClick:()->Unit,
     onAdvancedSettingsClick:()->Unit,
+    onFoodAdminClick:()->Unit = {},
     onDreiPunkteClick:() -> Unit,
     onShowTutorialClick: () -> Unit
     ) {
@@ -139,6 +141,9 @@ fun ProfileView(
             },
             OnMoreVertCklick = {
                 onDreiPunkteClick()
+            },
+            onFoodAdminClick = {
+                onFoodAdminClick()
             }
         )
         Settings(
@@ -169,7 +174,8 @@ fun YourProfileView(
     onEditProfileClick: () -> Unit,
     onSignUpClick:()->Unit,
     onSignInClick:()->Unit,
-    OnMoreVertCklick:()->Unit
+    OnMoreVertCklick:()->Unit,
+    onFoodAdminClick:()->Unit = {}
 ) {
 
     val authState = signInViewModel.authResults.collectAsState(AuthResult.Unauthorized())
@@ -386,7 +392,10 @@ fun YourProfileView(
                             text = userRole,
                             fontSize = 14.sp,
                             style = MaterialTheme.typography.titleMedium,
-                            color = Lime600
+                            color = Lime600,
+                            modifier = Modifier.clickable(enabled = userRole == UserRoles.FOODADMIN.toString()) {
+                                onFoodAdminClick()
+                            }
                         )
                         Text(
                             text = profileViewModel.email,

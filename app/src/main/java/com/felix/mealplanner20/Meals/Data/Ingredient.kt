@@ -69,6 +69,7 @@ data class Ingredient(
             dgeGroup.VEGETABLE -> true
             dgeGroup.LEGUME -> true
             dgeGroup.NUTSANDSEEDS -> true
+            dgeGroup.SPICE -> true
             else -> false
         }
     }

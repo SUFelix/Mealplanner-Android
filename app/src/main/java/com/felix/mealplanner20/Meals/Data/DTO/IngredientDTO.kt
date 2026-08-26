@@ -17,6 +17,9 @@ data class IngredientDTO(
     val dgeType: String,
     val alcohol: Float,
     val isFavorit: Boolean,
-    val unitOfMeasure: String
+    val unitOfMeasure: String,
+    val status: String = "APPROVED",
+    val aiEstimated: Boolean = false,
+    val plantGroupKey: String? = null
 )
 

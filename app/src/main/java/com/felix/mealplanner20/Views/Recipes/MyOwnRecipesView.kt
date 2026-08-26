@@ -61,6 +61,7 @@ import com.felix.mealplanner20.Screen
 import com.felix.mealplanner20.ViewModels.MainViewModel
 import com.felix.mealplanner20.ViewModels.MyOwnRecipesViewModel
 import com.felix.mealplanner20.Views.Components.MyCircularProgressIndicator
+import com.felix.mealplanner20.Views.Components.RECIPE_MAIN_IMAGE_ASPECT_RATIO
 import com.felix.mealplanner20.ui.theme.Lime600
 
 @Composable
@@ -286,7 +287,7 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
     var textLineCount by remember { mutableStateOf(2) }
     BoxWithConstraints {
         val cardWidth = maxWidth * 1f // 80% der Bildschirmbreite
-        val cardHeight = cardWidth * 1.264f // Höhe abhängig von der Breite
+        val cardHeight = cardWidth * 0.93f // Höhe abhängig von der Breite
 
 
         Card(
@@ -311,7 +312,7 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f)
+                            .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                             .padding(
                                 top = 4.dp,
                                 start = 4.dp,
@@ -326,7 +327,7 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
                        contentDescription = "Dummy Image",
                        modifier = Modifier
                            .fillMaxWidth()
-                           .aspectRatio(1f)
+                           .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                            .padding(if (textLineCount > 1) 0.dp else 4.dp)
                            .clip(RoundedCornerShape(8.dp)),
                        contentScale = ContentScale.Crop

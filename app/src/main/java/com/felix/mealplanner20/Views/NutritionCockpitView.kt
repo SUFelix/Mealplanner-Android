@@ -35,7 +35,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -71,10 +70,12 @@ import com.felix.mealplanner20.Meals.Data.helpers.DayDetailData
 import com.felix.mealplanner20.Meals.Data.helpers.DgeData
 import com.felix.mealplanner20.Meals.Data.helpers.PlantMetricData
 import com.felix.mealplanner20.Meals.Data.helpers.dgeGroup
+import com.felix.mealplanner20.Meals.Data.helpers.plantWeight
 import com.felix.mealplanner20.NUTRITION_COCKPIT_TEST_TAG
 import com.felix.mealplanner20.R
 import com.felix.mealplanner20.ViewModels.NutritionViewModel
 import com.felix.mealplanner20.Views.Components.CircleIndicator
+import com.felix.mealplanner20.Views.Components.formatIndicatorValue
 import com.felix.mealplanner20.Views.Mealplan.GLOBAL_CARD_ELEVATION
 import com.felix.mealplanner20.ui.theme.Lime100
 import com.felix.mealplanner20.ui.theme.Lime600
@@ -95,6 +96,7 @@ import com.felix.mealplanner20.ui.theme.nutsandseeds
 import com.felix.mealplanner20.ui.theme.oil
 import com.felix.mealplanner20.ui.theme.other
 import com.felix.mealplanner20.ui.theme.potato
+import com.felix.mealplanner20.ui.theme.spice
 import com.felix.mealplanner20.ui.theme.vegetable
 import com.felix.mealplanner20.ui.theme.wholegrain
 import androidx.compose.ui.geometry.Rect
@@ -117,9 +119,32 @@ val dgeColors = mapOf(
     dgeGroup.VEGETABLE to vegetable,
     dgeGroup.LEGUME to legume,
     dgeGroup.NUTSANDSEEDS to nutsandseeds,
+    dgeGroup.SPICE to spice,
     dgeGroup.OTHER to other,
    // dgeGroup.OTHERVEGETARIAN to other,
    // dgeGroup.OTHERVEGAN to other
+)
+
+@Composable
+fun dgeGroup.displayName(): String = stringResource(
+    when (this) {
+        dgeGroup.MILK -> R.string.dge_group_milk
+        dgeGroup.FISH -> R.string.dge_group_fish
+        dgeGroup.MEAT -> R.string.dge_group_meat
+        dgeGroup.EGG -> R.string.dge_group_egg
+        dgeGroup.OIL -> R.string.dge_group_oil
+        dgeGroup.GRAIN -> R.string.dge_group_grain
+        dgeGroup.WHOLEGRAIN -> R.string.dge_group_wholegrain
+        dgeGroup.POTATO -> R.string.dge_group_potato
+        dgeGroup.FRUIT -> R.string.dge_group_fruit
+        dgeGroup.VEGETABLE -> R.string.dge_group_vegetable
+        dgeGroup.LEGUME -> R.string.dge_group_legume
+        dgeGroup.NUTSANDSEEDS -> R.string.dge_group_nutsandseeds
+        dgeGroup.OTHER -> R.string.dge_group_other
+        dgeGroup.OTHERVEGAN -> R.string.dge_group_othervegan
+        dgeGroup.OTHERVEGETARIAN -> R.string.dge_group_othervegetarian
+        dgeGroup.SPICE -> R.string.dge_group_spice
+    }
 )
 @Composable
 fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
@@ -135,7 +160,7 @@ fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
     }
     else{
         val plantMetric = nutritionViewModel.plantMetric.collectAsStateWithLifecycle(
-            initialValue = PlantMetricData(distinctPlants = emptyList(), count = 0)
+            initialValue = PlantMetricData(distinctPlants = emptyList(), count = 0f)
         )
         val caloriesAvg = nutritionViewModel.caloriesAvg.collectAsStateWithLifecycle(initialValue = 0f)
         val caloriesPerDay =  nutritionViewModel.caloriesPerDay.collectAsStateWithLifecycle(initialValue = listOf(0f))
@@ -222,24 +247,10 @@ fun PlantOverview(
                 CircleIndicator(
                     canvasSize = 200.dp,
                     indicatorValue = plantMetric.count,
-                    maxIndicatorValue = plantMetric.target,
-                    badgeText = stringResource(R.string.plants_this_week)
+                    maxIndicatorValue = plantMetric.target.toFloat(),
+                    badgeText = stringResource(R.string.plants_this_week),
+                    badgeShowsExpandIcon = true
                 )
-                Row(
-                    modifier = Modifier.padding(top = 4.dp, bottom = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.view_plant_list),
-                        style = MaterialTheme.typography.labelMedium.copy(color = Slate500)
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowDown,
-                        contentDescription = null,
-                        tint = Slate500,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
             }
             Row(
                 modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 16.dp),
@@ -257,7 +268,7 @@ fun PlantOverview(
     if (showPlantList) {
         PlantListDialog(
             onDismiss = { showPlantList = false },
-            plants = plantMetric.distinctPlants
+            plantMetric = plantMetric
         )
     }
 }
@@ -265,8 +276,9 @@ fun PlantOverview(
 @Composable
 fun PlantListDialog(
     onDismiss: () -> Unit,
-    plants: List<Ingredient>
+    plantMetric: PlantMetricData
 ) {
+    val plants = plantMetric.distinctPlants
     val isGerman = Locale.getDefault().language == "de"
     val plantsByCategory = plants.groupBy { it.dgeType }
     val orderedCategories = dgeColors.keys.filter { plantsByCategory.containsKey(it) }
@@ -317,11 +329,14 @@ fun PlantListDialog(
                         val categoryColor = dgeColors[category] ?: Color.Gray
                         val categoryPlants = plantsByCategory[category].orEmpty()
                         item(key = "header_${category.name}") {
-                            PlantCategoryHeader(name = category.name, color = categoryColor, count = categoryPlants.size)
+                            val categoryScore = categoryPlants.fold(0f) { acc, plant -> acc + plant.plantWeight() }
+                            PlantCategoryHeader(name = category.displayName(), color = categoryColor, count = categoryScore)
                         }
                         items(items = categoryPlants, key = { it.id }) { plant ->
+                            val groupMembers = plantMetric.groupedIngredients[plant.id].orEmpty()
                             PlantListRow(
-                                name = if (isGerman) plant.germanName else plant.englishName ?: plant.germanName,
+                                names = groupMembers.ifEmpty { listOf(plant) }
+                                    .map { if (isGerman) it.germanName else it.englishName ?: it.germanName },
                                 color = categoryColor
                             )
                         }
@@ -333,7 +348,7 @@ fun PlantListDialog(
 }
 
 @Composable
-fun PlantCategoryHeader(name: String, color: Color, count: Int) {
+fun PlantCategoryHeader(name: String, color: Color, count: Float) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -353,14 +368,14 @@ fun PlantCategoryHeader(name: String, color: Color, count: Int) {
         )
         Spacer(Modifier.width(4.dp))
         Text(
-            text = "($count)",
+            text = "(${formatIndicatorValue(count)})",
             style = MaterialTheme.typography.labelMedium.copy(color = Slate500)
         )
     }
 }
 
 @Composable
-fun PlantListRow(name: String, color: Color) {
+fun PlantListRow(names: List<String>, color: Color) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -374,10 +389,18 @@ fun PlantListRow(name: String, color: Color) {
                 .background(color, shape = RoundedCornerShape(2.dp))
         )
         Spacer(Modifier.width(12.dp))
-        Text(
-            text = name,
-            style = MaterialTheme.typography.titleMedium
-        )
+        Column {
+            Text(
+                text = names.firstOrNull().orEmpty(),
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (names.size > 1) {
+                Text(
+                    text = stringResource(R.string.plant_group_also_counted, names.drop(1).joinToString(", ")),
+                    style = MaterialTheme.typography.labelSmall.copy(color = Slate500)
+                )
+            }
+        }
     }
     Divider()
 }
@@ -595,7 +618,7 @@ fun PieChartLegend(dgeMapping:List<Pair<DgeData, DgeData?>>) {
                     .find { it.first.group == dgeGroup.OTHERVEGAN }?.first?.percentage?:0f
             }
 
-            DGEItem(name = group.name, color = color, actualValue = actualValue, recommenedValue = recommendedValue)
+            DGEItem(name = group.displayName(), color = color, actualValue = actualValue, recommenedValue = recommendedValue)
 
         }
     }

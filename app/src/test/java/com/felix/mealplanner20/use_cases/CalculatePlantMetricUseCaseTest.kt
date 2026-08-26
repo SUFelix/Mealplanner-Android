@@ -38,7 +38,7 @@ class CalculatePlantMetricUseCaseTest {
         val result = calculatePlantMetricUseCase(flowOf(ingredients))
 
         val metric = result.first()
-        assertThat(metric.count).isEqualTo(2)
+        assertThat(metric.count).isEqualTo(2f)
         assertThat(metric.distinctPlants.map { it.id }).containsExactly(1L, 2L)
     }
 
@@ -51,7 +51,7 @@ class CalculatePlantMetricUseCaseTest {
 
         val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
 
-        assertThat(metric.count).isEqualTo(1)
+        assertThat(metric.count).isEqualTo(1f)
         assertThat(metric.distinctPlants.single().id).isEqualTo(2L)
     }
 
@@ -63,7 +63,7 @@ class CalculatePlantMetricUseCaseTest {
 
         val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
 
-        assertThat(metric.count).isEqualTo(0)
+        assertThat(metric.count).isEqualTo(0f)
     }
 
     @Test
@@ -75,7 +75,7 @@ class CalculatePlantMetricUseCaseTest {
 
         val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
 
-        assertThat(metric.count).isEqualTo(1)
+        assertThat(metric.count).isEqualTo(1f)
     }
 
     @Test
@@ -89,8 +89,10 @@ class CalculatePlantMetricUseCaseTest {
 
         val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
 
-        assertThat(metric.count).isEqualTo(2)
+        assertThat(metric.count).isEqualTo(2f)
         assertThat(metric.distinctPlants.map { it.id }).containsExactly(1L, 4L)
+        assertThat(metric.groupedIngredients[1L]?.map { it.id }).containsExactly(1L, 2L, 3L)
+        assertThat(metric.groupedIngredients[4L]?.map { it.id }).containsExactly(4L)
     }
 
     @Test
@@ -102,6 +104,70 @@ class CalculatePlantMetricUseCaseTest {
 
         val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
 
-        assertThat(metric.count).isEqualTo(2)
+        assertThat(metric.count).isEqualTo(2f)
+    }
+
+    @Test
+    fun `spices only count a quarter of a plant`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Basilikum", dgeGroup.SPICE),
+            ingredient(2, "Oregano", dgeGroup.SPICE),
+            ingredient(3, "Apfel", dgeGroup.FRUIT)
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        // 2 distinct spices * 0.25 + 1 full plant = 1.5
+        assertThat(metric.count).isEqualTo(1.5f)
+        assertThat(metric.distinctPlants.map { it.id }).containsExactly(1L, 2L, 3L)
+    }
+
+    @Test
+    fun `spices sharing a plantGroupKey still count only one 0_25 share`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Getrocknetes Basilikum", dgeGroup.SPICE, plantGroupKey = "basil"),
+            ingredient(2, "Frisches Basilikum", dgeGroup.SPICE, plantGroupKey = "basil")
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        assertThat(metric.count).isEqualTo(0.25f)
+    }
+
+    @Test
+    fun `ingredients tagged zero don't count towards the metric`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Apfelsaft", dgeGroup.FRUIT, plantGroupKey = "zero"),
+            ingredient(2, "Apfel", dgeGroup.FRUIT)
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        assertThat(metric.count).isEqualTo(1f)
+        assertThat(metric.distinctPlants.map { it.id }).containsExactly(2L)
+    }
+
+    @Test
+    fun `zero-tagged ingredients are not merged into a single group`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Apfelsaft", dgeGroup.FRUIT, plantGroupKey = "zero"),
+            ingredient(2, "Orangensaft", dgeGroup.FRUIT, plantGroupKey = "zero")
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        assertThat(metric.count).isEqualTo(0f)
+        assertThat(metric.distinctPlants).isEmpty()
+    }
+
+    @Test
+    fun `zero tag is matched case-insensitively`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Apfelsaft", dgeGroup.FRUIT, plantGroupKey = "Zero")
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        assertThat(metric.count).isEqualTo(0f)
     }
 }

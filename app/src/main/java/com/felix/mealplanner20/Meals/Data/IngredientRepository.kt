@@ -35,9 +35,8 @@ class IngredientRepository @Inject constructor(
                if (localIngredient == null) {
                    ingredientsToInsert.add(apiIngredient.toIngredient())
                } else {
-                   // plantGroupKey is local-only curation (not part of the server DTO), so it must
-                   // be carried over here - otherwise every sync would wipe it back to null.
-                   val merged = apiIngredient.toIngredient().copy(plantGroupKey = localIngredient.plantGroupKey)
+                   // Server is now authoritative for plantGroupKey, so sync overwrites any local value.
+                   val merged = apiIngredient.toIngredient()
                    if (localIngredient != merged) {
                        ingredientsToUpdate.add(merged)
                    }
@@ -95,7 +94,8 @@ class IngredientRepository @Inject constructor(
             dgeType = this.dgeType?.let { dgeGroup.valueOf(it) } ?: dgeGroup.OTHER,
             alcohol = this.alcohol ,
             isFavorit = this.isFavorit,
-            unitOfMeasure = this.unitOfMeasure?.let { UnitOfMeasure.valueOf(it) } ?: UnitOfMeasure.GRAM
+            unitOfMeasure = this.unitOfMeasure?.let { UnitOfMeasure.valueOf(it) } ?: UnitOfMeasure.GRAM,
+            plantGroupKey = this.plantGroupKey
         )
     }
     fun Ingredient.toIngredientDTO(): IngredientDTO {
@@ -113,13 +113,53 @@ class IngredientRepository @Inject constructor(
             dgeType = this.dgeType.name,
             alcohol = this.alcohol,
             isFavorit = this.isFavorit,
-            unitOfMeasure = this.unitOfMeasure.name
+            unitOfMeasure = this.unitOfMeasure.name,
+            plantGroupKey = this.plantGroupKey
         )
     }
 
     suspend fun getAllIngredientsFromApi(): List<IngredientDTO> {
         return withContext(Dispatchers.IO) {
             ingredientApiService.getAllIngredients()
+        }
+    }
+
+    suspend fun getIngredientByIdFromApi(id: Long): IngredientDTO? {
+        return try {
+            withContext(Dispatchers.IO) {
+                ingredientApiService.getIngredientById(id)
+            }
+        } catch (e: Exception) {
+            // 404 is expected here for a freshly created, not-yet-approved ingredient - the
+            // public endpoint only returns APPROVED ingredients.
+            null
+        }
+    }
+
+    suspend fun getPendingIngredientsFromApi(token: String): List<IngredientDTO> {
+        return withContext(Dispatchers.IO) {
+            val headers = mapOf("Authorization" to "Bearer $token")
+            ingredientApiService.getPendingIngredients(headers)
+        }
+    }
+
+    suspend fun approveIngredient(id: Long, token: String): Boolean {
+        return try {
+            val headers = mapOf("Authorization" to "Bearer $token")
+            ingredientApiService.approveIngredient(id, headers).isSuccessful
+        } catch (e: Exception) {
+            Log.e("IngredientRepository", "Error approving ingredient", e)
+            false
+        }
+    }
+
+    suspend fun rejectIngredient(id: Long, token: String): Boolean {
+        return try {
+            val headers = mapOf("Authorization" to "Bearer $token")
+            ingredientApiService.rejectIngredient(id, headers).isSuccessful
+        } catch (e: Exception) {
+            Log.e("IngredientRepository", "Error rejecting ingredient", e)
+            false
         }
     }
 

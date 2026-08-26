@@ -3,7 +3,6 @@ package com.felix.mealplanner20.Views.Components
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -11,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -70,26 +73,27 @@ import kotlin.math.min
 @Composable
 fun CircleIndicator(
     canvasSize: Dp = 152.dp,
-    indicatorValue:Int = 0,
-    maxIndicatorValue:Int = 100,
+    indicatorValue: Float = 0f,
+    maxIndicatorValue: Float = 100f,
     backgroundIndicatorColor: Color = light_grey,
     backgroundIndicatorStrokeWidth:Float = 32f,
-    foregroundIndicatorColor: Color = getColorFromIndicatorValue(((indicatorValue.toFloat() / maxIndicatorValue) * 100).toInt()),
+    foregroundIndicatorColor: Color = getColorFromIndicatorValue(((indicatorValue / maxIndicatorValue) * 100).toInt()),
     foregroundIndicatorStrokeWidth:Float = 32f,
     bigTextColor: Color = foregroundIndicatorColor,
-    badgeText: String = stringResource(R.string.nutrition_score)
+    badgeText: String = stringResource(R.string.nutrition_score),
+    badgeShowsExpandIcon: Boolean = false
 )
 {
     var animatedIndicatorValue by remember { mutableStateOf(0f) }
     LaunchedEffect(key1 = indicatorValue) {
-        animatedIndicatorValue = indicatorValue.toFloat()
+        animatedIndicatorValue = indicatorValue
     }
     val percentage = max(0.0f,min((animatedIndicatorValue / maxIndicatorValue)*100,100.0f))
     val sweepAngle by animateFloatAsState(
         targetValue = (percentage * 3.6).toFloat(),
         animationSpec = tween(700)
     )
-    val receivedValue by animateIntAsState(
+    val receivedValue by animateFloatAsState(
         targetValue = indicatorValue,
         animationSpec = tween(700)
     )
@@ -114,7 +118,7 @@ fun CircleIndicator(
     ) {
 
         Text(
-            text = "$receivedValue",
+            text = formatIndicatorValue(receivedValue),
             color = bigTextColor,
             style = MaterialTheme.typography.displayMedium,
             modifier = Modifier.align(Alignment.Center)
@@ -125,8 +129,20 @@ fun CircleIndicator(
                 .clip(RoundedCornerShape(16.dp))
                 .align(Alignment.BottomCenter)
                 .background(color = Slate950.copy(alpha = 0.65f)),
-            text = badgeText
+            text = badgeText,
+            showExpandIcon = badgeShowsExpandIcon
         )
+    }
+}
+
+// Rounds to 2 decimals and drops a trailing ".0"/".x0" so whole numbers still read as "6"
+// instead of "6.0", while fractional scores (e.g. from spice weighting) show as "5.5".
+fun formatIndicatorValue(value: Float): String {
+    val rounded = kotlin.math.round(value * 100) / 100f
+    return if (rounded == rounded.toLong().toFloat()) {
+        rounded.toLong().toString()
+    } else {
+        rounded.toString().trimEnd('0').trimEnd('.')
     }
 }
 
@@ -198,7 +214,11 @@ fun EmbeddedElements(
     }
 }
 @Composable
-fun NutritionScoreBadge(modifier:Modifier,text: String = stringResource(R.string.nutrition_score)) {
+fun NutritionScoreBadge(
+    modifier: Modifier,
+    text: String = stringResource(R.string.nutrition_score),
+    showExpandIcon: Boolean = false
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = modifier
@@ -211,16 +231,28 @@ fun NutritionScoreBadge(modifier:Modifier,text: String = stringResource(R.string
                 .blur(32.dp)
         )
 
-        Text(
+        Row(
             modifier = Modifier.padding(horizontal = 16.dp),
-            text = text,
-            color = Color.White,
-            style = MaterialTheme.typography.labelSmall
-        )
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = text,
+                color = Color.White,
+                style = MaterialTheme.typography.labelSmall
+            )
+            if (showExpandIcon) {
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
     }
 }
 @Composable
 @Preview(showBackground = true)
 fun CustomComposablePreview(){
-    CircleIndicator(indicatorValue = 20)
+    CircleIndicator(indicatorValue = 20f)
 }
