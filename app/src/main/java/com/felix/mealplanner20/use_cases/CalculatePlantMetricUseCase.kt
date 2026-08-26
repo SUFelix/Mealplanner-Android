@@ -9,7 +9,8 @@ import javax.inject.Inject
 class CalculatePlantMetricUseCase @Inject constructor() {
     operator fun invoke(ingredientsFlow: Flow<List<Ingredient>>): Flow<PlantMetricData> {
         return ingredientsFlow.map { ingredients ->
-            val distinctPlants = ingredients.filter { it.isPlant() }.distinctBy { it.id }
+            val distinctPlants = ingredients.filter { it.isPlant() }
+                .distinctBy { it.plantGroupKey ?: it.id.toString() }
             PlantMetricData(distinctPlants = distinctPlants, count = distinctPlants.size)
         }
     }

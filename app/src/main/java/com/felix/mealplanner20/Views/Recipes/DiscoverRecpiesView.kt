@@ -303,7 +303,6 @@ fun BigRecipeCardItem(
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
-                    //.data("http://192.168.2.216:8080/images/recipe/83fd8410-df95-4dd5-9d55-ae2efb6fd8b1..jpg")
                     .crossfade(true)
 
                     .listener(

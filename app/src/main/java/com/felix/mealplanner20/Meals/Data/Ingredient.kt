@@ -35,7 +35,9 @@ data class Ingredient(
     @ColumnInfo(name = "isFavorit")
     val isFavorit: Boolean = false,
     @ColumnInfo(name = "ingredient_unitOfMeasure")
-    val unitOfMeasure: UnitOfMeasure = UnitOfMeasure.GRAM
+    val unitOfMeasure: UnitOfMeasure = UnitOfMeasure.GRAM,
+    @ColumnInfo(name = "plantGroupKey")
+    val plantGroupKey: String? = null
     ){
 
    fun isVegan():Boolean{

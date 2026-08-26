@@ -21,7 +21,7 @@ import com.felix.mealplanner20.Shopping.Data.ShoppingListItem
         RecipeDescription::class,
         RecipeMealTypeWeight::class
     ],
-    version = 41,
+    version = 42,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -122,6 +122,7 @@ object NavGraph {
             .addMigrations(MIGRATION_38_39)
             .addMigrations(MIGRATION_39_40)
             .addMigrations(MIGRATION_40_41)
+            .addMigrations(MIGRATION_41_42)
             .build()
     }
     @Provides
@@ -810,6 +811,12 @@ FOREIGN KEY (recipe_id) REFERENCES recipe_table(id) ON DELETE CASCADE
     val MIGRATION_40_41 = object : Migration(40, 41) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE shopping_list_table ADD COLUMN customName TEXT")
+        }
+    }
+
+    val MIGRATION_41_42 = object : Migration(41, 42) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE ingredient_table ADD COLUMN plantGroupKey TEXT")
         }
     }
 

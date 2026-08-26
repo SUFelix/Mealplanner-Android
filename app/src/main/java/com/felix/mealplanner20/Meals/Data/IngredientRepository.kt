@@ -35,8 +35,11 @@ class IngredientRepository @Inject constructor(
                if (localIngredient == null) {
                    ingredientsToInsert.add(apiIngredient.toIngredient())
                } else {
-                   if (localIngredient != apiIngredient.toIngredient()) {
-                       ingredientsToUpdate.add(apiIngredient.toIngredient())
+                   // plantGroupKey is local-only curation (not part of the server DTO), so it must
+                   // be carried over here - otherwise every sync would wipe it back to null.
+                   val merged = apiIngredient.toIngredient().copy(plantGroupKey = localIngredient.plantGroupKey)
+                   if (localIngredient != merged) {
+                       ingredientsToUpdate.add(merged)
                    }
                }
            }

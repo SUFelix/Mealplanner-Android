@@ -18,11 +18,12 @@ class CalculatePlantMetricUseCaseTest {
         calculatePlantMetricUseCase = CalculatePlantMetricUseCase()
     }
 
-    private fun ingredient(id: Long, name: String, dgeType: dgeGroup) = Ingredient(
+    private fun ingredient(id: Long, name: String, dgeType: dgeGroup, plantGroupKey: String? = null) = Ingredient(
         id = id,
         germanName = name,
         englishName = name,
-        dgeType = dgeType
+        dgeType = dgeType,
+        plantGroupKey = plantGroupKey
     )
 
     @Test
@@ -75,5 +76,32 @@ class CalculatePlantMetricUseCaseTest {
         val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
 
         assertThat(metric.count).isEqualTo(1)
+    }
+
+    @Test
+    fun `dedupes ingredients sharing a plantGroupKey`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Tomaten", dgeGroup.VEGETABLE, plantGroupKey = "tomato"),
+            ingredient(2, "Dosentomaten", dgeGroup.VEGETABLE, plantGroupKey = "tomato"),
+            ingredient(3, "Tomatenmark", dgeGroup.VEGETABLE, plantGroupKey = "tomato"),
+            ingredient(4, "Gurke", dgeGroup.VEGETABLE)
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        assertThat(metric.count).isEqualTo(2)
+        assertThat(metric.distinctPlants.map { it.id }).containsExactly(1L, 4L)
+    }
+
+    @Test
+    fun `untagged ingredients of the same category still count separately`() = runBlocking<Unit> {
+        val ingredients = listOf(
+            ingredient(1, "Apple", dgeGroup.FRUIT),
+            ingredient(2, "Banana", dgeGroup.FRUIT)
+        )
+
+        val metric = calculatePlantMetricUseCase(flowOf(ingredients)).first()
+
+        assertThat(metric.count).isEqualTo(2)
     }
 }

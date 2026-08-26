@@ -44,6 +44,7 @@
     <string name="new_ingredient_defaultname">nouvel ingrédient</string>
     <string name="dge_label">dge</string>
     <string name="uom_label">Unité</string>
+    <string name="plant_group_key_label">Groupe de plantes (optionnel, ex. « tomate »)</string>
     <string name="delete_text">Supprimer</string>
     <string name="nutri_stats_title">Statistiques nutritionnelles</string>
     <string name="mealplan">plan de repas</string>

@@ -52,6 +52,7 @@
     <string name="new_ingredient_defaultname">neue Zutat</string>
     <string name="dge_label">dge</string>
     <string name="uom_label">Einheit</string>
+    <string name="plant_group_key_label">Pflanzengruppe (optional, z. B. „Tomate“)</string>
     <string name="delete_text">Löschen</string>
     <string name="nutri_stats_title">Ernährungsstatistiken</string>
     <string name="mealplan">Essensplan</string>

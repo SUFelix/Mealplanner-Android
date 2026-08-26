@@ -46,6 +46,7 @@
     <string name="new_ingredient_defaultname">neues Food</string>
     <string name="dge_label">dge</string>
     <string name="uom_label">uom</string>
+    <string name="plant_group_key_label">Plant group (optional, e.g. "tomato")</string>
     <string name="delete_text">Delete</string>
     <string name="nutri_stats_title">Nutri-Stats</string>
     <string name="replace_recipe">Replace Recipe</string>
