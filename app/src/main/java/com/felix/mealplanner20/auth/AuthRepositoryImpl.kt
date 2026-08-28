@@ -61,7 +61,6 @@ class AuthRepositoryImpl(
 
     override suspend fun signIn(usernameOrEmail: String, password: String): AuthResult<Unit> {
         return try {
-            Log.d("AuthRepository", "signIn() called with usernameOrEmail=$usernameOrEmail")
             val response = api.signIn(
                 request = AuthRequest(
                     username = usernameOrEmail,
@@ -69,7 +68,6 @@ class AuthRepositoryImpl(
                 )
             )
 
-            Log.d("AuthRepository", "signIn() success, token=${response.token}, role=${response.role}")
             prefs.edit()
                 .putString("jwt", response.token)
                 .apply()
