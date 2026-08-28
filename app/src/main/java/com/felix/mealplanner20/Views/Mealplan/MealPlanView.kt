@@ -7,8 +7,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -129,8 +133,15 @@ fun MealPlan(
             )
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            LazyRow(modifier = Modifier.weight(1f)) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val viewportHeight = maxHeight
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+            LazyRow(modifier = Modifier.heightIn(max = viewportHeight)) {
                 itemsIndexed(
                     items = mealPlanList.value,
                     key = { _,item -> item.id }
@@ -162,6 +173,7 @@ fun MealPlan(
                         .height(50.dp)
                         .padding(end = 16.dp)
                 )
+            }
             }
         }
     }
@@ -199,13 +211,13 @@ fun SingleDayPart(
     Column(
         modifier = Modifier
             .width(190.dp)
-            .fillMaxHeight()
+            .wrapContentHeight(align = Alignment.Top)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp)
-                .padding(bottom = 8.dp, top = 24.dp)
+                .padding(bottom = 2.dp, top = 2.dp)
         ){
             Text(
                 text = stringResource(R.string.day)+" "+dayNumber,
@@ -216,7 +228,7 @@ fun SingleDayPart(
                 style = MaterialTheme.typography.titleMedium
             )
         }
-        LazyColumn(modifier = Modifier.weight(1f)) {
+        LazyColumn {
             itemsIndexed(recipeQuantities, key = { _, item -> item.recipeId }) { _, recipeQuantity ->
                 val recipe = recipeItems.find { it.id == recipeQuantity.recipeId }
 
@@ -248,7 +260,6 @@ fun DashedAddButton(onClick: () -> Unit) {
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .width(174.dp)
             .height(202.dp)
-            .clickable { onClick() }
             .clip(RoundedCornerShape(12.dp))
     ) {
         Canvas(
@@ -271,12 +282,15 @@ fun DashedAddButton(onClick: () -> Unit) {
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add",
-                tint = Slate950,
-                modifier = Modifier.size(32.dp)
-            )
+            FloatingActionButton(
+                onClick = onClick,
+                shape = CircleShape,
+                containerColor = Lime600,
+                contentColor = Color.White,
+                modifier = Modifier.size(45.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Create")
+            }
         }
     }
 }

@@ -242,6 +242,8 @@ fun MainView (){
                 )
                 Screen.BottomScreen.Profile(context).route ->{}
 
+                Screen.BottomScreen.MealPlanScreen(context).route ->{}
+
                 Screen.AddMealPlanRecipeScreen(context).route ->BackArrowTopAppBar(
                     title =  mainViewModel.currentTopAppBarTitle.value,
                     onBackArrowClick = {
