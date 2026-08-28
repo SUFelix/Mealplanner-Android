@@ -25,6 +25,12 @@
     <string name="reject">Reject</string>
     <string name="pending_ingredients_tab">Ingredients</string>
     <string name="pending_units_tab">Units</string>
+    <string name="pending_matches_tab">Matches</string>
+    <string name="no_pending_matches">No pending matches to review</string>
+    <string name="match_recipe_prefix">Recipe: %1$s</string>
+    <string name="match_suggested_label">Suggested match</string>
+    <string name="match_confirm">Confirm</string>
+    <string name="match_reject">Reject</string>
     <string name="no_pending_units">No pending units to review</string>
     <string name="grams_per_unit">Grams per unit</string>
     <string name="unit">Unit</string>

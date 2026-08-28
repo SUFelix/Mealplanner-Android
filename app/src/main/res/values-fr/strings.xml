@@ -20,6 +20,12 @@
     <string name="reject">Rejeter</string>
     <string name="pending_ingredients_tab">Ingrédients</string>
     <string name="pending_units_tab">Unités</string>
+    <string name="pending_matches_tab">Correspondances</string>
+    <string name="no_pending_matches">Aucune correspondance en attente de validation</string>
+    <string name="match_recipe_prefix">Recette : %1$s</string>
+    <string name="match_suggested_label">Correspondance suggérée</string>
+    <string name="match_confirm">Confirmer</string>
+    <string name="match_reject">Rejeter</string>
     <string name="no_pending_units">Aucune unité en attente de validation</string>
     <string name="grams_per_unit">Grammes par unité</string>
     <string name="unit">Unité</string>

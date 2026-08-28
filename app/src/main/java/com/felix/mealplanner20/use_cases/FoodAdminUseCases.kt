@@ -2,6 +2,7 @@ package com.felix.mealplanner20.use_cases
 
 import com.felix.mealplanner20.Meals.Data.DTO.IngredientAllowedUnitReviewDTO
 import com.felix.mealplanner20.Meals.Data.DTO.IngredientDTO
+import com.felix.mealplanner20.Meals.Data.DTO.IngredientMatchReviewDTO
 import com.felix.mealplanner20.Meals.Data.IngredientRepository
 import com.felix.mealplanner20.apiService.IngredientAllowedUnitApiService
 import com.mealplanner20.jwtauthktorandroid.auth.AuthRepository
@@ -33,6 +34,36 @@ class RejectIngredientUseCase(
     suspend fun execute(id: Long): Boolean {
         val token = authRepository.getToken() ?: return false
         return ingredientRepository.rejectIngredient(id, token)
+    }
+}
+
+class GetPendingMatchesUseCase(
+    private val ingredientRepository: IngredientRepository,
+    private val authRepository: AuthRepository
+) {
+    suspend fun execute(): List<IngredientMatchReviewDTO> {
+        val token = authRepository.getToken() ?: return emptyList()
+        return ingredientRepository.getPendingMatchesFromApi(token)
+    }
+}
+
+class ConfirmMatchUseCase(
+    private val ingredientRepository: IngredientRepository,
+    private val authRepository: AuthRepository
+) {
+    suspend fun execute(taskId: Long): Boolean {
+        val token = authRepository.getToken() ?: return false
+        return ingredientRepository.confirmMatch(taskId, token)
+    }
+}
+
+class RejectMatchUseCase(
+    private val ingredientRepository: IngredientRepository,
+    private val authRepository: AuthRepository
+) {
+    suspend fun execute(taskId: Long): Boolean {
+        val token = authRepository.getToken() ?: return false
+        return ingredientRepository.rejectMatch(taskId, token)
     }
 }
 

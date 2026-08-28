@@ -26,6 +26,12 @@
     <string name="reject">Ablehnen</string>
     <string name="pending_ingredients_tab">Zutaten</string>
     <string name="pending_units_tab">Einheiten</string>
+    <string name="pending_matches_tab">Matches</string>
+    <string name="no_pending_matches">Keine ausstehenden Matches zur Prüfung</string>
+    <string name="match_recipe_prefix">Rezept: %1$s</string>
+    <string name="match_suggested_label">Vorgeschlagener Match</string>
+    <string name="match_confirm">Bestätigen</string>
+    <string name="match_reject">Ablehnen</string>
     <string name="no_pending_units">Keine ausstehenden Einheiten zur Prüfung</string>
     <string name="grams_per_unit">Gramm pro Einheit</string>
     <string name="unit">Einheit</string>

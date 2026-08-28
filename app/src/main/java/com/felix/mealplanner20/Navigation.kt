@@ -34,6 +34,7 @@ import com.felix.mealplanner20.ViewModels.AddEditRecipeViewModel
 import com.felix.mealplanner20.ViewModels.DiscoverRecipesViewModel
 import com.felix.mealplanner20.ViewModels.FeedbackViewModel
 import com.felix.mealplanner20.ViewModels.FoodAdminAllowedUnitViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminMatchReviewViewModel
 import com.felix.mealplanner20.ViewModels.FoodAdminReviewViewModel
 import com.felix.mealplanner20.ViewModels.IngredientViewModel
 import com.felix.mealplanner20.ViewModels.MainViewModel
@@ -254,9 +255,11 @@ fun Navigation(
                 composable(route = Screen.FoodAdminReviewScreen(context).route){
                     val foodAdminReviewViewModel: FoodAdminReviewViewModel = hiltViewModel()
                     val foodAdminAllowedUnitViewModel: FoodAdminAllowedUnitViewModel = hiltViewModel()
+                    val foodAdminMatchReviewViewModel: FoodAdminMatchReviewViewModel = hiltViewModel()
                     FoodAdminReviewView(
                         foodAdminReviewViewModel = foodAdminReviewViewModel,
-                        foodAdminAllowedUnitViewModel = foodAdminAllowedUnitViewModel
+                        foodAdminAllowedUnitViewModel = foodAdminAllowedUnitViewModel,
+                        foodAdminMatchReviewViewModel = foodAdminMatchReviewViewModel
                     )
                     mainViewModel.setCurrentScreen(Screen.FoodAdminReviewScreen(context))
                 }

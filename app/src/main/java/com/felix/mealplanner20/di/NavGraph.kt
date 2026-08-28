@@ -46,6 +46,9 @@ import com.felix.mealplanner20.use_cases.DeleteRecipeByIdUseCase
 import com.felix.mealplanner20.use_cases.DownloadRecipeUseCase
 import com.felix.mealplanner20.use_cases.ApproveAllowedUnitUseCase
 import com.felix.mealplanner20.use_cases.ApproveIngredientUseCase
+import com.felix.mealplanner20.use_cases.ConfirmMatchUseCase
+import com.felix.mealplanner20.use_cases.GetPendingMatchesUseCase
+import com.felix.mealplanner20.use_cases.RejectMatchUseCase
 import com.felix.mealplanner20.use_cases.GetIngredientByIdUseCase
 import com.felix.mealplanner20.use_cases.GetPendingAllowedUnitsUseCase
 import com.felix.mealplanner20.use_cases.GetPendingIngredientsUseCase
@@ -371,6 +374,30 @@ object NavGraph {
         ingredientRepository: IngredientRepository
     ): GetIngredientByIdUseCase {
         return GetIngredientByIdUseCase(ingredientRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideGetPendingMatchesUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): GetPendingMatchesUseCase {
+        return GetPendingMatchesUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideConfirmMatchUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): ConfirmMatchUseCase {
+        return ConfirmMatchUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideRejectMatchUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): RejectMatchUseCase {
+        return RejectMatchUseCase(ingredientRepository, authRepository)
     }
     @Provides
     @Singleton

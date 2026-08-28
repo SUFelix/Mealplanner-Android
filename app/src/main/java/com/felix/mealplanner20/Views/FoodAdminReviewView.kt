@@ -32,8 +32,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.felix.mealplanner20.Meals.Data.DTO.IngredientDTO
+import com.felix.mealplanner20.Meals.Data.DTO.IngredientMatchReviewDTO
 import com.felix.mealplanner20.R
 import com.felix.mealplanner20.ViewModels.FoodAdminAllowedUnitViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminMatchReviewViewModel
 import com.felix.mealplanner20.ViewModels.FoodAdminReviewViewModel
 import com.felix.mealplanner20.ViewModels.PendingAllowedUnitUi
 import com.felix.mealplanner20.Views.Components.CustomButton
@@ -44,7 +46,8 @@ import java.util.Locale
 @Composable
 fun FoodAdminReviewView(
     foodAdminReviewViewModel: FoodAdminReviewViewModel,
-    foodAdminAllowedUnitViewModel: FoodAdminAllowedUnitViewModel
+    foodAdminAllowedUnitViewModel: FoodAdminAllowedUnitViewModel,
+    foodAdminMatchReviewViewModel: FoodAdminMatchReviewViewModel
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
 
@@ -60,10 +63,16 @@ fun FoodAdminReviewView(
                 onClick = { selectedTabIndex = 1 },
                 text = { Text(stringResource(R.string.pending_units_tab)) }
             )
+            Tab(
+                selected = selectedTabIndex == 2,
+                onClick = { selectedTabIndex = 2 },
+                text = { Text(stringResource(R.string.pending_matches_tab)) }
+            )
         }
         when (selectedTabIndex) {
             0 -> PendingIngredientsTab(foodAdminReviewViewModel)
             1 -> PendingAllowedUnitsTab(foodAdminAllowedUnitViewModel)
+            2 -> PendingMatchesTab(foodAdminMatchReviewViewModel)
         }
     }
 }
@@ -241,6 +250,135 @@ fun PendingAllowedUnitsTab(
                         onReject = { foodAdminAllowedUnitViewModel.reject(unit.ingredientId, unit.unitOfMeasure) }
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingMatchesTab(
+    foodAdminMatchReviewViewModel: FoodAdminMatchReviewViewModel
+) {
+    val pendingMatches by foodAdminMatchReviewViewModel.pendingMatches.collectAsState()
+    val isLoading by foodAdminMatchReviewViewModel.isLoading.collectAsState()
+    val processingTaskId by foodAdminMatchReviewViewModel.processingTaskId.collectAsState()
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background)
+    ) {
+        if (isLoading && pendingMatches.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center)) {
+                CircularProgressIndicator()
+            }
+        } else if (pendingMatches.isEmpty()) {
+            Box(modifier = Modifier.fillMaxSize().wrapContentSize(Alignment.Center)) {
+                Text(
+                    text = stringResource(R.string.no_pending_matches),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Slate500
+                )
+            }
+        } else {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
+                items(items = pendingMatches, key = { it.taskId }) { match ->
+                    PendingMatchItem(
+                        match = match,
+                        isProcessing = processingTaskId == match.taskId,
+                        onConfirm = { foodAdminMatchReviewViewModel.confirm(match.taskId) },
+                        onReject = { foodAdminMatchReviewViewModel.reject(match.taskId) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PendingMatchItem(
+    match: IngredientMatchReviewDTO,
+    isProcessing: Boolean,
+    onConfirm: () -> Unit,
+    onReject: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(text = match.extractedName, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = String.format(Locale.getDefault(), "%.0f%%", match.confidence * 100),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Lime600
+                )
+            }
+            match.originalText?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Slate500
+                )
+            }
+            match.recipeTitle?.let {
+                Text(
+                    text = stringResource(R.string.match_recipe_prefix, it),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Slate500,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+            if (match.matches.isNotEmpty()) {
+                Text(
+                    text = stringResource(R.string.match_suggested_label),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+                match.matches.forEach { suggestion ->
+                    Text(
+                        text = "• ${suggestion.matchedText} (#${suggestion.ingredientId})",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+            match.reasoning?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Slate500,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                CustomButton(
+                    text = stringResource(R.string.match_reject),
+                    onClick = onReject,
+                    buttonColor = Color.White,
+                    textColor = Color.Black,
+                    enabled = !isProcessing
+                )
+                CustomButton(
+                    text = stringResource(R.string.match_confirm),
+                    onClick = onConfirm,
+                    buttonColor = Lime600,
+                    textColor = Color.White,
+                    enabled = !isProcessing
+                )
             }
         }
     }

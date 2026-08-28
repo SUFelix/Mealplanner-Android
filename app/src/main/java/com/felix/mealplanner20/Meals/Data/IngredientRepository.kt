@@ -2,6 +2,7 @@ package com.felix.mealplanner20.Meals.Data
 
 import android.util.Log
 import com.felix.mealplanner20.Meals.Data.DTO.IngredientDTO
+import com.felix.mealplanner20.Meals.Data.DTO.IngredientMatchReviewDTO
 import com.felix.mealplanner20.Meals.Data.helpers.UnitOfMeasure
 import com.felix.mealplanner20.Meals.Data.helpers.dgeGroup
 import com.felix.mealplanner20.apiService.IngredientApiService
@@ -159,6 +160,33 @@ class IngredientRepository @Inject constructor(
             ingredientApiService.rejectIngredient(id, headers).isSuccessful
         } catch (e: Exception) {
             Log.e("IngredientRepository", "Error rejecting ingredient", e)
+            false
+        }
+    }
+
+    suspend fun getPendingMatchesFromApi(token: String): List<IngredientMatchReviewDTO> {
+        return withContext(Dispatchers.IO) {
+            val headers = mapOf("Authorization" to "Bearer $token")
+            ingredientApiService.getPendingMatches(headers)
+        }
+    }
+
+    suspend fun confirmMatch(taskId: Long, token: String): Boolean {
+        return try {
+            val headers = mapOf("Authorization" to "Bearer $token")
+            ingredientApiService.confirmMatch(taskId, headers).isSuccessful
+        } catch (e: Exception) {
+            Log.e("IngredientRepository", "Error confirming match", e)
+            false
+        }
+    }
+
+    suspend fun rejectMatch(taskId: Long, token: String): Boolean {
+        return try {
+            val headers = mapOf("Authorization" to "Bearer $token")
+            ingredientApiService.rejectMatch(taskId, headers).isSuccessful
+        } catch (e: Exception) {
+            Log.e("IngredientRepository", "Error rejecting match", e)
             false
         }
     }
