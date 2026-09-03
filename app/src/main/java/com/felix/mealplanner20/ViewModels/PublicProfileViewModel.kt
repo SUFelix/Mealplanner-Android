@@ -61,6 +61,7 @@ class PublicProfileViewModel @Inject constructor(
             try {
                 val profile = profileRepository.getPublicProfile(username)
                 if (profile != null) {
+                    Log.i("PublicProfileViewModel", "profile '$username' pictureUri = '${profile.pictureUri}'")
                     _username.value = profile.username
                     _pictureUri.value = profile.pictureUri
                     _description.value = profile.description ?: EMPTY_STRING

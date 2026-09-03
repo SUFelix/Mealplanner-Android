@@ -209,9 +209,15 @@ object NavGraph {
                 val is200 = resp.code == 200
                 val ct = resp.header("Content-Type") ?: ""
 
+                // Profilbilder haben eine stabile URL (/images/profile bzw. /images/profile/{username}),
+                // d.h. bei einem neuen Upload ändert sich der Key nicht. "immutable" wuerde hier das
+                // alte Bild bis zu 24h festhalten -> ausnehmen, damit ein neues Profilbild sofort erscheint.
+                val isProfileImage = req.url.encodedPath.startsWith("/images/profile")
+
                 val shouldAddDefaultCache =
                     isGet &&
                             is200 &&
+                            !isProfileImage &&
                             ct.startsWith("image/", ignoreCase = true) &&
                             resp.header("Cache-Control").isNullOrBlank()
 

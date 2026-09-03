@@ -5,7 +5,7 @@ import android.net.Uri
 import android.util.Log
 import com.felix.mealplanner20.BUCKET
 import com.felix.mealplanner20.ImageUpDownLoad
-import com.felix.mealplanner20.Meals.Data.helpers.uriToByteArray
+import com.felix.mealplanner20.Meals.Data.helpers.uriToScaledJpegBytes
 import com.felix.mealplanner20.apiService.ImageUriRequest
 import com.felix.mealplanner20.apiService.ProfileApiService
 import com.felix.mealplanner20.apiService.PublicProfileDTO
@@ -30,22 +30,40 @@ class ProfileRepository @Inject constructor(
 
     suspend fun uploadProfileImageAndUpdateUri(context: Context,uri:Uri, token: String, code:String): Response<Unit>?{
         val result = uploadProfileImage(context,uri,token,code)
-        result?.let {
-            if(it.isSuccess){
-                val headers = mapOf(
-                    "Authorization" to "Bearer $token",
-                    IMAGE_METADATA_CODE to code
-                )
-                val imgageUriRequest = ImageUriRequest(uri.toString())
-                return profileApiService.postNewImageUri(imgageUriRequest,headers)
-            }
+        if (result == null) {
+            Log.e("ProfileRepository", "Profilbild-Upload: keine Bytes / Ausnahme – nichts an den Server gesendet")
+            return null
+        }
+        result.onFailure { Log.e("ProfileRepository", "Profilbild-Upload zum Server fehlgeschlagen", it) }
+        if (result.isSuccess) {
+            // Der Server antwortet auf den Upload mit dem kanonischen Key/URI des Objekts.
+            // NICHT den lokalen file://-Pfad zurueckschicken – damit kann der Server das
+            // oeffentliche Profilbild (GET /images/profile/{username}) nicht aufloesen.
+            val serverUri = result.getOrNull()?.trim()?.takeIf { it.isNotEmpty() && it != "OK" }
+            Log.i("ProfileRepository", "Upload-Antwort (Key/URI) = ${serverUri ?: "<leer>"}")
+
+            val headers = mapOf(
+                "Authorization" to "Bearer $token",
+                IMAGE_METADATA_CODE to code
+            )
+            val imageUriRequest = ImageUriRequest(serverUri ?: code)
+            val response = profileApiService.postNewImageUri(imageUriRequest, headers)
+            Log.i(
+                "ProfileRepository",
+                "postNewImageUri -> HTTP ${response.code()} ${if (response.isSuccessful) "OK" else response.errorBody()?.string().orEmpty()}"
+            )
+            return response
         }
         return null
     }
 
     private suspend fun uploadProfileImage(context: Context,uri:Uri, token: String, code:String): Result<String>? {
         return try{
-            uriToByteArray(context,uri)?.let {bytes->
+            // Wie beim (funktionierenden) Rezeptbild-Upload: auf ein beschraenktes JPEG
+            // normalisieren. Roh-Bytes aus dem Cropper koennen zu gross sein oder ein
+            // anderes Format haben und werden dann serverseitig abgelehnt -> nichts im S3.
+            uriToScaledJpegBytes(context, uri, maxBytes = 900_000)?.let { bytes ->
+                Log.i("ProfileRepository", "Profilbild-Upload: ${bytes.size} bytes, code=${code.take(8)}…")
                 upDownLoad.uploadImage(bytes, token, code, BUCKET.PROFILE)
             }
         }catch (e:Exception){
@@ -84,7 +102,12 @@ class ProfileRepository @Inject constructor(
     }
     suspend fun getOwnProfilePicture(token: String): ByteArray? {
         return try{
-            val headers = mapOf("Authorization" to "Bearer $token")
+            // no-cache: erzwingt eine Revalidierung/Netzwerkabfrage, damit ein frisch
+            // hochgeladenes Profilbild nicht durch einen alten OkHttp-Cache-Eintrag verdeckt wird.
+            val headers = mapOf(
+                "Authorization" to "Bearer $token",
+                "Cache-Control" to "no-cache"
+            )
             upDownLoad.downloadOwnProfilePicture(headers)
         }catch (e:Exception){
             Log.e("ERROR",e.stackTraceToString())

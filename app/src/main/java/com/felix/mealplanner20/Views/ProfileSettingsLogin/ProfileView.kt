@@ -2,9 +2,9 @@ package com.felix.mealplanner20.Views.ProfileSettingsLogin
 
 import android.app.Activity
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.BorderStroke
@@ -71,7 +71,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.times
-import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.canhub.cropper.CropImageContract
@@ -80,6 +79,7 @@ import com.canhub.cropper.CropImageOptions
 import com.canhub.cropper.CropImageView
 import com.felix.mealplanner20.Meals.Data.EMPTY_STRING
 import com.felix.mealplanner20.Meals.Data.helpers.MORE_VERT_CONTENT_DESCRIPTION
+import com.felix.mealplanner20.Meals.Data.helpers.importCroppedImageToInternal
 import com.felix.mealplanner20.Meals.Data.helpers.UserRoles
 import com.felix.mealplanner20.R
 import com.felix.mealplanner20.ViewModels.ProfileViewModel
@@ -98,9 +98,6 @@ import com.felix.mealplanner20.ui.theme.Slate300
 import com.felix.mealplanner20.ui.theme.Slate500
 import com.felix.mealplanner20.ui.theme.Slate950
 import com.mealplanner20.jwtauthktorandroid.auth.AuthResult
-import java.io.File
-import java.io.FileOutputStream
-import java.util.UUID
 
 
 @Composable
@@ -187,9 +184,6 @@ fun YourProfileView(
     val isEditing = profileViewModel.isEditing.collectAsState()
 
     val context = LocalContext.current
-    var selectedImageUri by remember {
-        mutableStateOf<Uri?>( profileViewModel.profilePictureUri)
-    }
 
     LaunchedEffect(authState.value) {
         Log.i("YourProfile","authState: ${authState.value}")
@@ -204,33 +198,18 @@ fun YourProfileView(
         contract = CropImageContract(),
         onResult = { result ->
             if (result.isSuccessful) {
-                result.uriContent?.let { uri ->
-                    uri?.let { it ->
-                        val imgBytes = context.contentResolver.openInputStream(uri)?.use {
-                            it.readBytes()
-                        }
-                        imgBytes?.let { byteArray ->
-                            val originalBitmap =
-                                BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                            val scaledBitmap =
-                                Bitmap.createScaledBitmap(originalBitmap, 1080, 1080, true)
-
-                            val imagesFolder = File(context.filesDir, "recipe_images")
-                            if (!imagesFolder.exists()) {
-                                imagesFolder.mkdir()
-                            }
-
-                            val file = File(imagesFolder, "${UUID.randomUUID()}.jpg")
-                            FileOutputStream(file).use { fos ->
-                                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, fos)
-                            }
-                            val newUri:Uri = file.toUri()
-                            selectedImageUri = newUri
-                            profileViewModel.updateLocalProfilePictureAndUpload(context,newUri)
-                            settingsViewModel.saveSettings()
-                            //TODO profileviewmodel put new uri oder settings ? profil als entity?
-                        }
-                        //TODO wie lösche ich die Files aus der App wenn die Bilder nicht mehr verwendet werden?
+                result.uriContent?.let { croppedUri ->
+                    try {
+                        // Der Cropper liefert bereits ein fertiges JPEG (1080x1080, Q85).
+                        // Nur noch intern ablegen - KEIN erneutes Decodieren/Skalieren, das
+                        // sonst z.B. bei HEIC-Quellen mit NullPointerException abbricht und
+                        // damit sowohl Anzeige als auch Upload verhindert.
+                        val stored = context.importCroppedImageToInternal(croppedUri, "profile_images")
+                        profileViewModel.updateLocalProfilePictureAndUpload(context, stored)
+                        settingsViewModel.saveSettings()
+                    } catch (e: Exception) {
+                        Log.e("YourProfile", "Couldn't import profile image", e)
+                        Toast.makeText(context, "Couldn't import image", Toast.LENGTH_SHORT).show()
                     }
                 }
             } else {
@@ -322,8 +301,13 @@ fun YourProfileView(
                                         aspectRatioX = 1,
                                         aspectRatioY = 1,
                                         fixAspectRatio = true,
+                                        // NONE (Default) ignoriert die Request-Groesse -> der Cropper
+                                        // liefert dann das Bild in voller Aufloesung (mehrere MB),
+                                        // was der Server ablehnt. RESIZE_INSIDE erzwingt <= 1080px.
+                                        outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_INSIDE,
                                         outputRequestHeight = 1080,
                                         outputRequestWidth = 1080,
+                                        outputCompressFormat = Bitmap.CompressFormat.JPEG,
                                         outputCompressQuality = 85
                                     )
                                 )
@@ -351,8 +335,13 @@ fun YourProfileView(
                                         aspectRatioX = 1,
                                         aspectRatioY = 1,
                                         fixAspectRatio = true,
+                                        // NONE (Default) ignoriert die Request-Groesse -> der Cropper
+                                        // liefert dann das Bild in voller Aufloesung (mehrere MB),
+                                        // was der Server ablehnt. RESIZE_INSIDE erzwingt <= 1080px.
+                                        outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_INSIDE,
                                         outputRequestHeight = 1080,
                                         outputRequestWidth = 1080,
+                                        outputCompressFormat = Bitmap.CompressFormat.JPEG,
                                         outputCompressQuality = 85
                                     )
                                 )

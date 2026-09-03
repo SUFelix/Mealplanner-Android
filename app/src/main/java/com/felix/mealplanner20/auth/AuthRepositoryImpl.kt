@@ -77,6 +77,12 @@ class AuthRepositoryImpl(
             prefs.edit()
                 .putString("role", response.role.toString())
                 .apply()
+            // Echten Benutzernamen aus dem JWT ableiten und persistieren – wird sonst
+            // nirgends geschrieben, obwohl mehrere Stellen prefs["username"] lesen
+            // (u.a. Profilbild-Upload-Code und lokale Cache-Datei).
+            getUsernameClaim()?.let {
+                prefs.edit().putString("username", it).apply()
+            }
             AuthResult.Authorized()
         } catch(e: HttpException) {
             val code = e.code()
@@ -174,6 +180,10 @@ class AuthRepositoryImpl(
         return try {
             val token = prefs.getString("jwt", null) ?: return AuthResult.Unauthorized()
             api.authenticate("Bearer $token")
+            // Bestehende Sessions (kein erneuter Login) mit dem Benutzernamen versorgen.
+            if (prefs.getString("username", null).isNullOrBlank()) {
+                getUsernameClaim()?.let { prefs.edit().putString("username", it).apply() }
+            }
             AuthResult.Authorized()
         } catch(e: HttpException) {
             if(e.code() == 401) {
