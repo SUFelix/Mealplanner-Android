@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +63,8 @@ import com.felix.mealplanner20.Screen
 import com.felix.mealplanner20.ViewModels.MainViewModel
 import com.felix.mealplanner20.ViewModels.MyOwnRecipesViewModel
 import com.felix.mealplanner20.Views.Components.MyCircularProgressIndicator
+import com.felix.mealplanner20.Views.Components.RECIPE_MAIN_IMAGE_ASPECT_RATIO
+import com.felix.mealplanner20.Views.Components.WizardPromptDialog
 import com.felix.mealplanner20.ui.theme.Lime600
 
 @Composable
@@ -79,6 +83,7 @@ fun MyOwnRecipesView(
     val wizardResult by myOwnRecipesViewModel.wizardResult.collectAsState()
     val wizardError by myOwnRecipesViewModel.wizardError.collectAsState()
     val navigateToWizardRecipe by myOwnRecipesViewModel.navigateToWizardRecipe.collectAsState()
+    var showWizardMenu by remember { mutableStateOf(false) }
 
     val photoPickerAvailable = remember {
         androidx.activity.result.contract.ActivityResultContracts
@@ -201,32 +206,53 @@ fun MyOwnRecipesView(
                     } else {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     }
-                    FloatingActionButton(
-                        onClick = {
-                            if (!isWizardEnabled) {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.wizard_premium_required),
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                return@FloatingActionButton
-                            }
-                            if (photoPickerAvailable) {
-                                pickWizardImage.launch(
-                                    androidx.activity.result.PickVisualMediaRequest(
-                                        androidx.activity.result.contract
-                                            .ActivityResultContracts.PickVisualMedia.ImageOnly
-                                    )
-                                )
-                            } else {
-                                openWizardImage.launch(arrayOf("image/*"))
-                            }
-                        },
-                        shape = CircleShape,
-                        containerColor = wizardContainerColor,
-                        contentColor = wizardContentColor,
-                    ) {
-                        Icon(painterResource(R.drawable.wizard), contentDescription = "Create")
+                    Box {
+                        FloatingActionButton(
+                            onClick = {
+                                if (!isWizardEnabled) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.wizard_premium_required),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@FloatingActionButton
+                                }
+                                showWizardMenu = true
+                            },
+                            shape = CircleShape,
+                            containerColor = wizardContainerColor,
+                            contentColor = wizardContentColor,
+                        ) {
+                            Icon(painterResource(R.drawable.wizard), contentDescription = "Create")
+                        }
+                        DropdownMenu(
+                            expanded = showWizardMenu,
+                            onDismissRequest = { showWizardMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.wizard_menu_scan_photo)) },
+                                onClick = {
+                                    showWizardMenu = false
+                                    if (photoPickerAvailable) {
+                                        pickWizardImage.launch(
+                                            androidx.activity.result.PickVisualMediaRequest(
+                                                androidx.activity.result.contract
+                                                    .ActivityResultContracts.PickVisualMedia.ImageOnly
+                                            )
+                                        )
+                                    } else {
+                                        openWizardImage.launch(arrayOf("image/*"))
+                                    }
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.wizard_menu_describe)) },
+                                onClick = {
+                                    showWizardMenu = false
+                                    myOwnRecipesViewModel.wizardPrompt.open()
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -258,6 +284,8 @@ fun MyOwnRecipesView(
 
 
 }
+    WizardPromptDialog(controller = myOwnRecipesViewModel.wizardPrompt)
+
     if (isWizardLoading) {
         Box(
             modifier = Modifier
@@ -286,7 +314,7 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
     var textLineCount by remember { mutableStateOf(2) }
     BoxWithConstraints {
         val cardWidth = maxWidth * 1f // 80% der Bildschirmbreite
-        val cardHeight = cardWidth * 1.264f // Höhe abhängig von der Breite
+        val cardHeight = cardWidth * 0.93f // Höhe abhängig von der Breite
 
 
         Card(
@@ -311,7 +339,7 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .aspectRatio(1f)
+                            .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                             .padding(
                                 top = 4.dp,
                                 start = 4.dp,
@@ -322,11 +350,11 @@ fun ResponsiveImageCard(recipe: Recipe, modifier: Modifier = Modifier,onClick: (
                 }
                 else{
                    Image(
-                       painter = painterResource(id = R.drawable.shake2240),
+                       painter = painterResource(id = R.drawable.apfelkarottestableassistand),
                        contentDescription = "Dummy Image",
                        modifier = Modifier
                            .fillMaxWidth()
-                           .aspectRatio(1f)
+                           .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                            .padding(if (textLineCount > 1) 0.dp else 4.dp)
                            .clip(RoundedCornerShape(8.dp)),
                        contentScale = ContentScale.Crop

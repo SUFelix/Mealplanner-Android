@@ -18,6 +18,9 @@ local.properties
 google-services.json
 # Firebase / Google Services
 **/google-services.json
+# Google OAuth client secrets
+client_secret*.json
+**/client_secret*.json
 CLAUDE.md
 2026-05-20-150403-look-at-clauderecipeupload.txt
 .idea/deploymentTargetSelector.xml

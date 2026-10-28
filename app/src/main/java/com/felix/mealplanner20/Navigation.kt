@@ -3,14 +3,17 @@ package com.felix.mealplanner20
 import ConfigureMyRecipesProbabilitiesView
 import android.app.Activity
 import android.os.Build
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.core.util.Consumer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +25,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import androidx.navigation.navigation
 import com.felix.mealplanner20.Meals.Data.EMPTY_STRING
 import com.felix.mealplanner20.Shopping.ShoppingListView
@@ -29,6 +33,9 @@ import com.felix.mealplanner20.Shopping.ShoppingListViewModel
 import com.felix.mealplanner20.ViewModels.AddEditRecipeViewModel
 import com.felix.mealplanner20.ViewModels.DiscoverRecipesViewModel
 import com.felix.mealplanner20.ViewModels.FeedbackViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminAllowedUnitViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminMatchReviewViewModel
+import com.felix.mealplanner20.ViewModels.FoodAdminReviewViewModel
 import com.felix.mealplanner20.ViewModels.IngredientViewModel
 import com.felix.mealplanner20.ViewModels.MainViewModel
 import com.felix.mealplanner20.ViewModels.MealPlanViewModel
@@ -39,6 +46,7 @@ import com.felix.mealplanner20.ViewModels.RecipeCatalogViewModel
 import com.felix.mealplanner20.ViewModels.SettingsViewModel
 import com.felix.mealplanner20.ViewModels.SignInViewModel
 import com.felix.mealplanner20.Views.AddEditIngredientView
+import com.felix.mealplanner20.Views.FoodAdminReviewView
 import com.felix.mealplanner20.Views.IngredientHomeView
 import com.felix.mealplanner20.Views.Mealplan.AddMealPlanRecipeView
 import com.felix.mealplanner20.Views.Mealplan.MealPlan
@@ -46,6 +54,7 @@ import com.felix.mealplanner20.Views.Mealplan.ReplaceMealPlanRecipeView
 import com.felix.mealplanner20.Views.NutritionDashboard
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.LoginView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ProfileView
+import com.felix.mealplanner20.Views.ProfileSettingsLogin.PublicProfileView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ResetPasswordConfirmView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ResetPasswordRequestView
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.SignUpView
@@ -78,6 +87,15 @@ fun Navigation(
 ){
     val activity: Activity = LocalContext.current as Activity
     val context = LocalContext.current
+
+    DisposableEffect(navController) {
+        val componentActivity = activity as ComponentActivity
+        val listener = Consumer<android.content.Intent> { intent ->
+            navController.handleDeepLink(intent)
+        }
+        componentActivity.addOnNewIntentListener(listener)
+        onDispose { componentActivity.removeOnNewIntentListener(listener) }
+    }
 
     val currentScreen = remember { mutableStateOf<Screen>(Screen.BottomScreen.CatalogScreen(context)) }
     val navigationEventChannel = remember { Channel<NavigationEvent>(Channel.BUFFERED) }
@@ -154,6 +172,10 @@ fun Navigation(
                         nullable = false
                         defaultValue = 0L
                     }
+                ),
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "https://www.mealplannerpro.net/de/recipe/{$SHOW_RECIPE_ARGUMENT_KEY}" },
+                    navDeepLink { uriPattern = "https://www.mealplannerpro.net/en/recipe/{$SHOW_RECIPE_ARGUMENT_KEY}" }
                 )
             ){ backStackEntry ->
                 val recipeId = backStackEntry.arguments?.getLong(SHOW_RECIPE_ARGUMENT_KEY) ?: 0L
@@ -164,7 +186,29 @@ fun Navigation(
                 DiscoverViewSingleRecipe(
                     recipeId =recipeId,
                     discoverRecipesViewModel = discoverRecipesViewModel,
-                    mainViewModel = mainViewModel
+                    mainViewModel = mainViewModel,
+                    onUsernameClick = { username ->
+                        navController.navigate(Screen.PublicProfileScreen(context).passUsername(username))
+                    }
+                )
+            }
+            composable(
+                route = Screen.PublicProfileScreen(context).route,
+                arguments = listOf(
+                    navArgument(PUBLIC_PROFILE_ARGUMENT_KEY) {
+                        type = NavType.StringType
+                        nullable = false
+                    }
+                )
+            ) { backStackEntry ->
+                val username = backStackEntry.arguments?.getString(PUBLIC_PROFILE_ARGUMENT_KEY) ?: EMPTY_STRING
+
+                mainViewModel.setCurrentTopAppBarTitle(username)
+                mainViewModel.setCurrentScreen(Screen.PublicProfileScreen(context))
+
+                PublicProfileView(
+                    username = username,
+                    navController = navController
                 )
             }
             navigation(
@@ -186,6 +230,9 @@ fun Navigation(
                         onAdvancedSettingsClick = {
                             navController.navigate(Screen.ConfigProbabilitiesScreen(context).route)
                         },
+                        onFoodAdminClick = {
+                            navController.navigate(Screen.FoodAdminReviewScreen(context).route)
+                        },
                         onDreiPunkteClick = {
                             navController.navigate(Screen.TopAppBarScreen.SendFeedback(context).route)
                         },
@@ -203,6 +250,18 @@ fun Navigation(
 
                     ConfigureMyRecipesProbabilitiesView(recipeCatalogViewModel = sharedRecipeCatalogViewModel)
                     mainViewModel.setCurrentScreen(Screen.ConfigProbabilitiesScreen(context))
+                }
+
+                composable(route = Screen.FoodAdminReviewScreen(context).route){
+                    val foodAdminReviewViewModel: FoodAdminReviewViewModel = hiltViewModel()
+                    val foodAdminAllowedUnitViewModel: FoodAdminAllowedUnitViewModel = hiltViewModel()
+                    val foodAdminMatchReviewViewModel: FoodAdminMatchReviewViewModel = hiltViewModel()
+                    FoodAdminReviewView(
+                        foodAdminReviewViewModel = foodAdminReviewViewModel,
+                        foodAdminAllowedUnitViewModel = foodAdminAllowedUnitViewModel,
+                        foodAdminMatchReviewViewModel = foodAdminMatchReviewViewModel
+                    )
+                    mainViewModel.setCurrentScreen(Screen.FoodAdminReviewScreen(context))
                 }
                 composable(
                     route = Screen.Login(context).route

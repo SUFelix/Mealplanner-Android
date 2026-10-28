@@ -49,6 +49,20 @@ class GetDayDetailsUseCase(
         )
     }
 
+    fun getDistinctIngredientsFlow(): Flow<List<Ingredient>> {
+        return flow {
+            emit(getAllDistinctIngredients())
+        }
+    }
+
+    suspend fun getAllDistinctIngredients(): List<Ingredient> {
+        val mpDays = mealPlanRepository.getAllMealPlanDays().first()
+        return mpDays
+            .flatMap { getIngredientsWithQuantities(it) }
+            .map { it.first }
+            .distinctBy { it.id }
+    }
+
     suspend fun buildAllDayDetails(mealPlanDays: List<MealPlanDay>): List<DayDetailData> {
         var i = 1
         return mealPlanDays.map { mealPlanDay ->

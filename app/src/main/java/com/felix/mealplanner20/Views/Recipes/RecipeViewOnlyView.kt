@@ -63,6 +63,7 @@ import com.felix.mealplanner20.ViewModels.AddEditRecipeViewModel
 import com.felix.mealplanner20.ViewModels.IngredientViewModel
 import com.felix.mealplanner20.ViewModels.MainViewModel
 import com.felix.mealplanner20.ViewModels.MealPlanViewModel
+import com.felix.mealplanner20.Views.Components.RECIPE_MAIN_IMAGE_ASPECT_RATIO
 import com.felix.mealplanner20.ui.theme.Lime600
 import com.felix.mealplanner20.ui.theme.Slate100
 import com.felix.mealplanner20.ui.theme.Slate200
@@ -216,7 +217,6 @@ fun CookModeDescriptionBlock(
     Column(
         modifier = Modifier
             .padding(top = 16.dp)
-            .heightIn(max = 4000.dp)
     ) {
         descriptionSteps?.forEach{ step ->
                 RecipeDescriptionViewOnlyStep(step.stepNr,step.text,step.imgUri)
@@ -368,12 +368,12 @@ fun BigImageWithBackArrow(
     showBackArrow: Boolean = true,
     onArrowClick:()->Unit = {}
 ) {
-    val fallbackDrawableId = R.drawable.baseline_fastfood_24
+    val fallbackDrawableId =  R.drawable.apfelkarottestableassistand
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(1f)
+            .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
     ) {
         if (imgUri != null) {
             Image(

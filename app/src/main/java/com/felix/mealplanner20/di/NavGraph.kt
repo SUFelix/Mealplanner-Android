@@ -34,7 +34,7 @@ import com.felix.mealplanner20.use_cases.AreAllIngredientsVeganUseCase
 import com.felix.mealplanner20.use_cases.AreAllIngredientsVegetarianUseCase
 import com.felix.mealplanner20.use_cases.CalculateCPFratioUseCase
 import com.felix.mealplanner20.use_cases.CalculateCaloriesUseCase
-import com.felix.mealplanner20.use_cases.CalculateNutritionQualityUseCase
+import com.felix.mealplanner20.use_cases.CalculatePlantMetricUseCase
 import com.felix.mealplanner20.use_cases.CalculateTotalCaloriesForIngredientWithRecipeListUseCase
 import com.felix.mealplanner20.use_cases.CleanUnusedRecipeImagesUseCase
 import com.felix.mealplanner20.use_cases.AddCustomShoppingListItemUseCase
@@ -44,6 +44,16 @@ import com.felix.mealplanner20.use_cases.DeleteIngredientFromRecipeUseCase
 import com.felix.mealplanner20.use_cases.DeleteOneItemFromShoppingListUseCase
 import com.felix.mealplanner20.use_cases.DeleteRecipeByIdUseCase
 import com.felix.mealplanner20.use_cases.DownloadRecipeUseCase
+import com.felix.mealplanner20.use_cases.ApproveAllowedUnitUseCase
+import com.felix.mealplanner20.use_cases.ApproveIngredientUseCase
+import com.felix.mealplanner20.use_cases.ConfirmMatchUseCase
+import com.felix.mealplanner20.use_cases.GetPendingMatchesUseCase
+import com.felix.mealplanner20.use_cases.RejectMatchUseCase
+import com.felix.mealplanner20.use_cases.GetIngredientByIdUseCase
+import com.felix.mealplanner20.use_cases.GetPendingAllowedUnitsUseCase
+import com.felix.mealplanner20.use_cases.GetPendingIngredientsUseCase
+import com.felix.mealplanner20.use_cases.RejectAllowedUnitUseCase
+import com.felix.mealplanner20.use_cases.RejectIngredientUseCase
 import com.felix.mealplanner20.use_cases.GetAllIngredientsForOneRecipeUseCase
 import com.felix.mealplanner20.use_cases.GetDayDetailsUseCase
 import com.felix.mealplanner20.use_cases.GetDgeRecommendationDataUseCase
@@ -89,7 +99,9 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
 
+
 const val BASE_URL = "https://www.mealplannerpro.net/"
+
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -122,6 +134,7 @@ object NavGraph {
             .addMigrations(MIGRATION_38_39)
             .addMigrations(MIGRATION_39_40)
             .addMigrations(MIGRATION_40_41)
+            .addMigrations(MIGRATION_41_42)
             .build()
     }
     @Provides
@@ -197,9 +210,15 @@ object NavGraph {
                 val is200 = resp.code == 200
                 val ct = resp.header("Content-Type") ?: ""
 
+                // Profilbilder haben eine stabile URL (/images/profile bzw. /images/profile/{username}),
+                // d.h. bei einem neuen Upload ändert sich der Key nicht. "immutable" wuerde hier das
+                // alte Bild bis zu 24h festhalten -> ausnehmen, damit ein neues Profilbild sofort erscheint.
+                val isProfileImage = req.url.encodedPath.startsWith("/images/profile")
+
                 val shouldAddDefaultCache =
                     isGet &&
                             is200 &&
+                            !isProfileImage &&
                             ct.startsWith("image/", ignoreCase = true) &&
                             resp.header("Cache-Control").isNullOrBlank()
 
@@ -334,6 +353,85 @@ object NavGraph {
 
     @Provides
     @Singleton
+    fun provideGetPendingIngredientsUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): GetPendingIngredientsUseCase {
+        return GetPendingIngredientsUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideApproveIngredientUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): ApproveIngredientUseCase {
+        return ApproveIngredientUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideRejectIngredientUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): RejectIngredientUseCase {
+        return RejectIngredientUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideGetIngredientByIdUseCase(
+        ingredientRepository: IngredientRepository
+    ): GetIngredientByIdUseCase {
+        return GetIngredientByIdUseCase(ingredientRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideGetPendingMatchesUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): GetPendingMatchesUseCase {
+        return GetPendingMatchesUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideConfirmMatchUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): ConfirmMatchUseCase {
+        return ConfirmMatchUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideRejectMatchUseCase(
+        ingredientRepository: IngredientRepository,
+        authRepository: AuthRepository
+    ): RejectMatchUseCase {
+        return RejectMatchUseCase(ingredientRepository, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideGetPendingAllowedUnitsUseCase(
+        ingredientAllowedUnitApiService: IngredientAllowedUnitApiService,
+        authRepository: AuthRepository
+    ): GetPendingAllowedUnitsUseCase {
+        return GetPendingAllowedUnitsUseCase(ingredientAllowedUnitApiService, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideApproveAllowedUnitUseCase(
+        ingredientAllowedUnitApiService: IngredientAllowedUnitApiService,
+        authRepository: AuthRepository
+    ): ApproveAllowedUnitUseCase {
+        return ApproveAllowedUnitUseCase(ingredientAllowedUnitApiService, authRepository)
+    }
+    @Provides
+    @Singleton
+    fun provideRejectAllowedUnitUseCase(
+        ingredientAllowedUnitApiService: IngredientAllowedUnitApiService,
+        authRepository: AuthRepository
+    ): RejectAllowedUnitUseCase {
+        return RejectAllowedUnitUseCase(ingredientAllowedUnitApiService, authRepository)
+    }
+    @Provides
+    @Singleton
     fun provideSyncronzieIngredientsUseCase(
         ingredientRepository: IngredientRepository
     ): SynchronizeIngredientsUseCase {
@@ -462,8 +560,8 @@ object NavGraph {
     }
     @Provides
     @Singleton
-    fun providecalculateNutritionQualityUseCase(nutritionUseCases: NutritionBasicUseCases):CalculateNutritionQualityUseCase{
-        return CalculateNutritionQualityUseCase(nutritionUseCases)
+    fun providecalculatePlantMetricUseCase():CalculatePlantMetricUseCase{
+        return CalculatePlantMetricUseCase()
     }
     @Provides
     @Singleton
@@ -810,6 +908,12 @@ FOREIGN KEY (recipe_id) REFERENCES recipe_table(id) ON DELETE CASCADE
     val MIGRATION_40_41 = object : Migration(40, 41) {
         override fun migrate(db: SupportSQLiteDatabase) {
             db.execSQL("ALTER TABLE shopping_list_table ADD COLUMN customName TEXT")
+        }
+    }
+
+    val MIGRATION_41_42 = object : Migration(41, 42) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE ingredient_table ADD COLUMN plantGroupKey TEXT")
         }
     }
 

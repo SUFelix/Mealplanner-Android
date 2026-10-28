@@ -118,7 +118,9 @@ import com.felix.mealplanner20.Views.Components.MyCircularProgressIndicator
 import com.felix.mealplanner20.Views.Components.CustomAlertDialog
 import com.felix.mealplanner20.Views.Components.CustomButton
 import com.felix.mealplanner20.Views.Components.CustomFullWidthButton
+import com.felix.mealplanner20.Views.Components.WizardPromptDialog
 import com.felix.mealplanner20.Views.Components.SwipeableItemWithActions
+import com.felix.mealplanner20.Views.Components.RECIPE_MAIN_IMAGE_ASPECT_RATIO
 import com.felix.mealplanner20.Views.ProfileSettingsLogin.ToggleButton
 import com.felix.mealplanner20.ui.theme.Lime600
 import com.felix.mealplanner20.ui.theme.Slate200
@@ -162,6 +164,16 @@ fun AddEditRecipeView(
     val unmatchedWizardIngredients by addEditRecipeViewModel.unmatchedWizardIngredients.collectAsState()
     val isApplyingWizard by addEditRecipeViewModel.isApplyingWizard.collectAsState()
     val wizardStepsAppliedCount by addEditRecipeViewModel.wizardStepsAppliedCount.collectAsState()
+    val lastWizardResult by addEditRecipeViewModel.lastWizardResult.collectAsState()
+    val wizardToast by addEditRecipeViewModel.wizardToast.collectAsState()
+    var showWizardRefineWarning by remember { mutableStateOf(false) }
+
+    LaunchedEffect(wizardToast) {
+        wizardToast?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            addEditRecipeViewModel.consumeWizardToast()
+        }
+    }
 
     LaunchedEffect(isDirty) { mainViewModel.setRecipeDirty(isDirty) }
 
@@ -218,8 +230,8 @@ fun AddEditRecipeView(
                     CropImageOptions(
                         imageSourceIncludeCamera = false,
                         cropShape = com.canhub.cropper.CropImageView.CropShape.RECTANGLE,
-                        aspectRatioX = 1,
-                        aspectRatioY = 1,
+                        aspectRatioX = 3,
+                        aspectRatioY = 2,
                         fixAspectRatio = true,
                         outputCompressFormat = Bitmap.CompressFormat.JPEG,
                         outputRequestHeight = 1080,
@@ -246,8 +258,8 @@ fun AddEditRecipeView(
                     CropImageOptions(
                         imageSourceIncludeCamera = false,
                         cropShape = com.canhub.cropper.CropImageView.CropShape.RECTANGLE,
-                        aspectRatioX = 1,
-                        aspectRatioY = 1,
+                        aspectRatioX = 3,
+                        aspectRatioY = 2,
                         fixAspectRatio = true,
                         outputCompressFormat = Bitmap.CompressFormat.JPEG,
                         outputRequestHeight = 1080,
@@ -359,6 +371,30 @@ fun AddEditRecipeView(
                     items = unmatchedWizardIngredients,
                     onDismiss = { addEditRecipeViewModel.dismissUnmatchedWizardWarning() }
                 )
+            }
+
+            if (showWizardRefineWarning) {
+                CustomAlertDialog(
+                    title = stringResource(R.string.wizard_refine_warning_title),
+                    text = stringResource(R.string.wizard_refine_warning_text),
+                    onConfirm = { addEditRecipeViewModel.wizardRefinePrompt.open() },
+                    onDismiss = { showWizardRefineWarning = false }
+                )
+            }
+            WizardPromptDialog(
+                controller = addEditRecipeViewModel.wizardRefinePrompt,
+                isRefine = true
+            )
+
+            if (lastWizardResult != null) {
+                Box {
+                    CustomFullWidthButton(
+                        text = stringResource(R.string.wizard_prompt_refine_title),
+                        onClick = { showWizardRefineWarning = true },
+                        textColor = Lime600,
+                        buttonColor = Color.White
+                    )
+                }
             }
 
             RecipeBlock1(
@@ -582,7 +618,7 @@ fun RecipeBlock1(
                 } else {
                     Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f)
+                        .aspectRatio(RECIPE_MAIN_IMAGE_ASPECT_RATIO)
                 }
             )
 

@@ -218,6 +218,9 @@ fun DiscoverRecipesView(
                                 showOriginalTitle = showOriginalTitle,
                                 onClick = {
                                     navController.navigate(Screen.DiscoverRecipesSingleViewScreen(context = context).passId(recipe.id))
+                                },
+                                onUsernameClick = { username ->
+                                    navController.navigate(Screen.PublicProfileScreen(context).passUsername(username))
                                 }
                             )
                         }
@@ -271,7 +274,8 @@ fun NewMealTypeButton(mealType: Mealtype?,
 fun BigRecipeCardItem(
     recipe: Recipe,
     showOriginalTitle:Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onUsernameClick: (String) -> Unit = {}
 ) {
 
     val parentImageCoords = remember { mutableStateOf<LayoutCoordinates?>(null) }
@@ -303,7 +307,6 @@ fun BigRecipeCardItem(
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(imageUrl)
-                    //.data("http://192.168.2.216:8080/images/recipe/83fd8410-df95-4dd5-9d55-ae2efb6fd8b1..jpg")
                     .crossfade(true)
 
                     .listener(
@@ -429,7 +432,10 @@ fun BigRecipeCardItem(
                     modifier = Modifier
                         .padding(end = 12.dp)
                         .widthIn(min = (screenWidth/6.0).dp,max  =(screenWidth/3.0).dp)
-                        .wrapContentWidth(Alignment.End),
+                        .wrapContentWidth(Alignment.End)
+                        .clickable(enabled = !recipe.createdBy.isNullOrBlank()) {
+                            recipe.createdBy?.let { onUsernameClick(it) }
+                        },
                     text = if (isGerman) {
                         "von ${recipe.createdBy}"
                     } else {

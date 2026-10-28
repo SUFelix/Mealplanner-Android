@@ -95,6 +95,7 @@ fun AddEditIngredientView(
                     ingredientViewModel.ingredientAlcoholState = value.alcohol.toString()
                     ingredientViewModel.ingredientDgeTypeState = value.dgeType
                     ingredientViewModel.unitOfMeasureState= value.unitOfMeasure
+                    ingredientViewModel.ingredientPlantGroupKeyState = value.plantGroupKey ?: EMPTY_STRING
                 }
             }
 
@@ -110,6 +111,7 @@ fun AddEditIngredientView(
         ingredientViewModel.ingredientAlcoholState = "0"
         ingredientViewModel.ingredientDgeTypeState = dgeGroup.GRAIN
         ingredientViewModel.unitOfMeasureState= UnitOfMeasure.GRAM
+        ingredientViewModel.ingredientPlantGroupKeyState = EMPTY_STRING
     }
 
     Scaffold(
@@ -199,6 +201,22 @@ fun AddEditIngredientView(
                 onValueChange = {ingredientViewModel.onUnitOfMeasureChange(it.toString())})
             InBetweenRowSpacer()
             Row(
+                modifier = Modifier
+                    .padding(getMyRowPadding())
+            ){
+                OutlinedTextField(
+                    value = ingredientViewModel.ingredientPlantGroupKeyState,
+                    onValueChange = { ingredientViewModel.onIngredientPlantGroupKeyChange(it) },
+                    label = { Text(text = stringResource(R.string.plant_group_key_label), color = Color.Black, fontWeight = FontWeight.Bold) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(getMyDoubleFieldPadding()),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    colors = TextFieldDefaults.colors()
+                )
+            }
+            InBetweenRowSpacer()
+            Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
@@ -229,7 +247,8 @@ fun AddEditIngredientView(
                                         fibre = ingredientViewModel.ingredientFibreState.toFloat(),
                                         alcohol = ingredientViewModel.ingredientAlcoholState.toFloat(),
                                         dgeType = ingredientViewModel.ingredientDgeTypeState,
-                                        unitOfMeasure = ingredientViewModel.unitOfMeasureState)
+                                        unitOfMeasure = ingredientViewModel.unitOfMeasureState,
+                                        plantGroupKey = ingredientViewModel.ingredientPlantGroupKeyState.trim().ifBlank { null })
                                 )
                                 snackMessage.value = "Ingredient has been updated"
                             }else{
@@ -246,7 +265,8 @@ fun AddEditIngredientView(
                                         fibre = ingredientViewModel.ingredientFibreState.toFloat(),
                                         alcohol = ingredientViewModel.ingredientAlcoholState.toFloat(),
                                         dgeType = ingredientViewModel.ingredientDgeTypeState,
-                                        unitOfMeasure = ingredientViewModel.unitOfMeasureState
+                                        unitOfMeasure = ingredientViewModel.unitOfMeasureState,
+                                        plantGroupKey = ingredientViewModel.ingredientPlantGroupKeyState.trim().ifBlank { null }
                                     ))
                                 snackMessage.value = "Ingredient has been created"
                             }

@@ -112,6 +112,7 @@ val fruit = Color(0xFF9C27B0)      // Lebendiges Lila
 val vegetable = Lime500  // Natürliches, kräftiges Grün
 val legume = Slate400     // Warmes Bohnenbraun
 val nutsandseeds = Orange300
+val spice = Color(0xFFB8531D)      // Warmes Paprika-Rotbraun
 val other = Color(0xFF00BCD4)
 
 

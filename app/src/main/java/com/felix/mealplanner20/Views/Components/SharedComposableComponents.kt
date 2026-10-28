@@ -37,6 +37,8 @@ import com.felix.mealplanner20.Views.LabeledIntValueBox
 import com.felix.mealplanner20.Views.Mealplan.GLOBAL_CARD_ELEVATION
 import com.felix.mealplanner20.ui.theme.Slate300
 
+const val RECIPE_MAIN_IMAGE_ASPECT_RATIO = 1.5f // Breite:Höhe, entspricht Discover's BigRecipeCardItem (3:2)
+
 @Composable
 fun MyRecipeListItem(recipe: Recipe, calories: RecipeCalories, recipeViewModel: RecipeCatalogViewModel, onClick: () -> Unit) {
     Card(

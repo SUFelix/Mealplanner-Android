@@ -20,9 +20,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -31,9 +33,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Divider
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -59,14 +64,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.felix.mealplanner20.Meals.Data.Ingredient
 import com.felix.mealplanner20.Meals.Data.helpers.AllDayDetailsWithGlobalDge
 import com.felix.mealplanner20.Meals.Data.helpers.DayDetailData
 import com.felix.mealplanner20.Meals.Data.helpers.DgeData
+import com.felix.mealplanner20.Meals.Data.helpers.PlantMetricData
 import com.felix.mealplanner20.Meals.Data.helpers.dgeGroup
+import com.felix.mealplanner20.Meals.Data.helpers.plantWeight
 import com.felix.mealplanner20.NUTRITION_COCKPIT_TEST_TAG
 import com.felix.mealplanner20.R
 import com.felix.mealplanner20.ViewModels.NutritionViewModel
 import com.felix.mealplanner20.Views.Components.CircleIndicator
+import com.felix.mealplanner20.Views.Components.formatIndicatorValue
 import com.felix.mealplanner20.Views.Mealplan.GLOBAL_CARD_ELEVATION
 import com.felix.mealplanner20.ui.theme.Lime100
 import com.felix.mealplanner20.ui.theme.Lime600
@@ -87,12 +96,14 @@ import com.felix.mealplanner20.ui.theme.nutsandseeds
 import com.felix.mealplanner20.ui.theme.oil
 import com.felix.mealplanner20.ui.theme.other
 import com.felix.mealplanner20.ui.theme.potato
+import com.felix.mealplanner20.ui.theme.spice
 import com.felix.mealplanner20.ui.theme.vegetable
 import com.felix.mealplanner20.ui.theme.wholegrain
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Path
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.felix.mealplanner20.Views.Components.MyCircularProgressIndicator
+import java.util.Locale
 
 
 val dgeColors = mapOf(
@@ -108,9 +119,32 @@ val dgeColors = mapOf(
     dgeGroup.VEGETABLE to vegetable,
     dgeGroup.LEGUME to legume,
     dgeGroup.NUTSANDSEEDS to nutsandseeds,
+    dgeGroup.SPICE to spice,
     dgeGroup.OTHER to other,
    // dgeGroup.OTHERVEGETARIAN to other,
    // dgeGroup.OTHERVEGAN to other
+)
+
+@Composable
+fun dgeGroup.displayName(): String = stringResource(
+    when (this) {
+        dgeGroup.MILK -> R.string.dge_group_milk
+        dgeGroup.FISH -> R.string.dge_group_fish
+        dgeGroup.MEAT -> R.string.dge_group_meat
+        dgeGroup.EGG -> R.string.dge_group_egg
+        dgeGroup.OIL -> R.string.dge_group_oil
+        dgeGroup.GRAIN -> R.string.dge_group_grain
+        dgeGroup.WHOLEGRAIN -> R.string.dge_group_wholegrain
+        dgeGroup.POTATO -> R.string.dge_group_potato
+        dgeGroup.FRUIT -> R.string.dge_group_fruit
+        dgeGroup.VEGETABLE -> R.string.dge_group_vegetable
+        dgeGroup.LEGUME -> R.string.dge_group_legume
+        dgeGroup.NUTSANDSEEDS -> R.string.dge_group_nutsandseeds
+        dgeGroup.OTHER -> R.string.dge_group_other
+        dgeGroup.OTHERVEGAN -> R.string.dge_group_othervegan
+        dgeGroup.OTHERVEGETARIAN -> R.string.dge_group_othervegetarian
+        dgeGroup.SPICE -> R.string.dge_group_spice
+    }
 )
 @Composable
 fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
@@ -125,10 +159,11 @@ fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
         }
     }
     else{
-        val nutritionQuality = nutritionViewModel.nutritionQuality.collectAsStateWithLifecycle( initialValue = 42)
+        val plantMetric = nutritionViewModel.plantMetric.collectAsStateWithLifecycle(
+            initialValue = PlantMetricData(distinctPlants = emptyList(), count = 0f)
+        )
         val caloriesAvg = nutritionViewModel.caloriesAvg.collectAsStateWithLifecycle(initialValue = 0f)
         val caloriesPerDay =  nutritionViewModel.caloriesPerDay.collectAsStateWithLifecycle(initialValue = listOf(0f))
-        val overallNutrientCompliance = nutritionViewModel.overallNutrientCompliance.collectAsStateWithLifecycle(initialValue = 0)
         val allDayDetailsWithGlobalDgeState = nutritionViewModel.allDayDetailsWithGlobalDgeFlow.collectAsStateWithLifecycle(
             initialValue = AllDayDetailsWithGlobalDge(
                 emptyList(), 0f
@@ -141,13 +176,6 @@ fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
                 .border(BorderStroke(1.dp, Slate300))
                 .testTag(NUTRITION_COCKPIT_TEST_TAG)
         ) {
-            /*NutritionOverview(
-                nutritionQuality.value,
-                caloriesAvg.value,
-                overallNutrientCompliance.value,
-                allDayDetailsWithGlobalDgeState.value.globalDgeCompliance
-            )*/
-
             Box(modifier = Modifier
                 .fillMaxSize()
                 .border(BorderStroke(1.dp, Slate300))
@@ -156,10 +184,8 @@ fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
                 DayDetailList(
                     allDayDetailsWithGlobalDgeState.value.dayDetails,
                     caloriesPerDay.value,
-                    nutritionQuality.value,
-                    caloriesAvg.value,
-                    overallNutrientCompliance.value,
-                    allDayDetailsWithGlobalDgeState.value.globalDgeCompliance
+                    plantMetric.value,
+                    caloriesAvg.value
                 )
             }
         }
@@ -170,10 +196,8 @@ fun NutritionDashboard(nutritionViewModel: NutritionViewModel) {
 fun DayDetailList(
     dayDetails: List<DayDetailData>,
     caloriesPerDay: List<Float>,
-    nutritionQuality: Int,
-    caloriesAvg:Float,
-    overallNutrientCompliance:Int,
-    globalDge:Float
+    plantMetric: PlantMetricData,
+    caloriesAvg:Float
 ) {
     LazyColumn(
         modifier = Modifier
@@ -182,11 +206,9 @@ fun DayDetailList(
     ) {
 
         item{
-            NutritionOverview(
-                nutritionQuality,
-                caloriesAvg,
-                overallNutrientCompliance,
-                globalDge
+            PlantOverview(
+                plantMetric,
+                caloriesAvg
             )
         }
 
@@ -204,12 +226,11 @@ fun DayDetailList(
 
 
 @Composable
-fun NutritionOverview(
-    nutritionQuality: Int,
-    caloriesAvg:Float,
-    overallNutrientCompliance:Int,
-    globalDge:Float
+fun PlantOverview(
+    plantMetric: PlantMetricData,
+    caloriesAvg:Float
 ) {
+    var showPlantList by remember { mutableStateOf(false) }
     Box(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
@@ -217,45 +238,171 @@ fun NutritionOverview(
         Column(modifier = Modifier.fillMaxWidth(),
           horizontalAlignment = Alignment.CenterHorizontally
         ){
-            CircleIndicator(
-                canvasSize = 200.dp,
-                indicatorValue = nutritionQuality,
-                maxIndicatorValue = 100,
-            )
-            CaloriesIndicator(caloriesAvg,overallNutrientCompliance,globalDge)
+            Column(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { showPlantList = true },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircleIndicator(
+                    canvasSize = 200.dp,
+                    indicatorValue = plantMetric.count,
+                    maxIndicatorValue = plantMetric.target.toFloat(),
+                    badgeText = stringResource(R.string.plants_this_week),
+                    badgeShowsExpandIcon = true
+                )
+            }
+            Row(
+                modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ){
+                Text(
+                    text = "${caloriesAvg.toInt()} kCal",
+                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 32.sp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(stringResource(R.string.per_day), style = MaterialTheme.typography.titleSmall)
+            }
+        }
+    }
+    if (showPlantList) {
+        PlantListDialog(
+            onDismiss = { showPlantList = false },
+            plantMetric = plantMetric
+        )
+    }
+}
+
+@Composable
+fun PlantListDialog(
+    onDismiss: () -> Unit,
+    plantMetric: PlantMetricData
+) {
+    val plants = plantMetric.distinctPlants
+    val isGerman = Locale.getDefault().language == "de"
+    val plantsByCategory = plants.groupBy { it.dgeType }
+    val orderedCategories = dgeColors.keys.filter { plantsByCategory.containsKey(it) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.85f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, top = 16.dp, end = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.plants_dialog_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    IconButton(onClick = onDismiss) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = stringResource(R.string.close)
+                        )
+                    }
+                }
+                Divider()
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    orderedCategories.forEach { category ->
+                        val categoryColor = dgeColors[category] ?: Color.Gray
+                        val categoryPlants = plantsByCategory[category].orEmpty()
+                        item(key = "header_${category.name}") {
+                            val categoryScore = categoryPlants.fold(0f) { acc, plant -> acc + plant.plantWeight() }
+                            PlantCategoryHeader(name = category.displayName(), color = categoryColor, count = categoryScore)
+                        }
+                        items(items = categoryPlants, key = { it.id }) { plant ->
+                            val groupMembers = plantMetric.groupedIngredients[plant.id].orEmpty()
+                            PlantListRow(
+                                names = groupMembers.ifEmpty { listOf(plant) }
+                                    .map { if (isGerman) it.germanName else it.englishName ?: it.germanName },
+                                color = categoryColor
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun CaloriesIndicator(caloriesAvg:Float,overallNutrientCompliance:Int,globalDge:Float) {
-    Column(
-        modifier = Modifier.padding( start = 16.dp),
-        Arrangement.Center,
-        Alignment.CenterHorizontally
-    ){
-        Row (
-            modifier = Modifier.padding(start = 16.dp, top = 16.dp,end = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Text(
-                text = "${caloriesAvg.toInt()} kCal",
-                style = MaterialTheme.typography.labelMedium.copy(fontSize = 32.sp)
-            )
-            Spacer(Modifier.width(8.dp))
-            Text(stringResource(R.string.per_day), style = MaterialTheme.typography.titleSmall)
-        }
-
-        Row(
+fun PlantCategoryHeader(name: String, color: Color, count: Float) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(color.copy(alpha = 0.12f))
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly){
-            Text("${(globalDge*100).toInt()}"+" %"+" "+stringResource(R.string.dge_compliance), style = MaterialTheme.typography.titleMedium.copy(color = Slate500))
+                .size(12.dp)
+                .background(color, shape = RoundedCornerShape(6.dp))
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+            text = name,
+            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold, color = Slate950)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = "(${formatIndicatorValue(count)})",
+            style = MaterialTheme.typography.labelMedium.copy(color = Slate500)
+        )
+    }
+}
 
-            Text("$overallNutrientCompliance"+" %"+" "+stringResource(R.string.macro_compliance), style = MaterialTheme.typography.titleMedium.copy(color = Slate500))
+@Composable
+fun PlantListRow(names: List<String>, color: Color) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(20.dp)
+                .background(color, shape = RoundedCornerShape(2.dp))
+        )
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(
+                text = names.firstOrNull().orEmpty(),
+                style = MaterialTheme.typography.titleMedium
+            )
+            if (names.size > 1) {
+                Text(
+                    text = stringResource(R.string.plant_group_also_counted, names.drop(1).joinToString(", ")),
+                    style = MaterialTheme.typography.labelSmall.copy(color = Slate500)
+                )
+            }
         }
     }
+    Divider()
 }
 
 @Composable
@@ -471,7 +618,7 @@ fun PieChartLegend(dgeMapping:List<Pair<DgeData, DgeData?>>) {
                     .find { it.first.group == dgeGroup.OTHERVEGAN }?.first?.percentage?:0f
             }
 
-            DGEItem(name = group.name, color = color, actualValue = actualValue, recommenedValue = recommendedValue)
+            DGEItem(name = group.displayName(), color = color, actualValue = actualValue, recommenedValue = recommendedValue)
 
         }
     }

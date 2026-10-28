@@ -5,7 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.felix.mealplanner20.Meals.Data.helpers.AllDayDetailsWithGlobalDge
 import com.felix.mealplanner20.Meals.Data.helpers.DgeData
-import com.felix.mealplanner20.use_cases.CalculateNutritionQualityUseCase
+import com.felix.mealplanner20.Meals.Data.helpers.PlantMetricData
+import com.felix.mealplanner20.use_cases.CalculatePlantMetricUseCase
 import com.felix.mealplanner20.use_cases.GetDayDetailsUseCase
 import com.felix.mealplanner20.use_cases.NutritionBasicUseCases
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,15 +21,14 @@ import javax.inject.Inject
 class NutritionViewModel @Inject constructor(
     private val nutritionUseCases: NutritionBasicUseCases,
     private val getDayDetailsUseCase: GetDayDetailsUseCase,
-    private val calculateNutritionQualityUseCase:CalculateNutritionQualityUseCase
+    private val calculatePlantMetricUseCase: CalculatePlantMetricUseCase
 ) : ViewModel() {
 
     lateinit var allDayDetailsWithGlobalDgeFlow : Flow<AllDayDetailsWithGlobalDge>
     lateinit var dgeRecommendationData:List<DgeData>
-    lateinit var nutritionQuality :Flow<Int>
+    lateinit var plantMetric: Flow<PlantMetricData>
     lateinit var caloriesAvg: Flow<Float>
     lateinit var caloriesPerDay: Flow<List<Float>>
-    lateinit var overallNutrientCompliance:Flow<Int>
 
     private val _isLoading = MutableStateFlow<Boolean>(true)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -36,8 +36,8 @@ class NutritionViewModel @Inject constructor(
         loadDayDetails()
     }
 
-    private fun calculateNutritionQuality(allDayDetailsWithGlobalDgeFlow: Flow<AllDayDetailsWithGlobalDge>) {
-            nutritionQuality = calculateNutritionQualityUseCase(allDayDetailsWithGlobalDgeFlow)
+    private fun calculatePlantMetric() {
+            plantMetric = calculatePlantMetricUseCase(getDayDetailsUseCase.getDistinctIngredientsFlow())
     }
 
     private fun calculateCaloriesAvg(allDayDetailsWithGlobalDgeFlow: Flow<AllDayDetailsWithGlobalDge>) {
@@ -52,12 +52,6 @@ class NutritionViewModel @Inject constructor(
             )
     }
 
-    private fun calculateOverallNutrientCompliance(allDayDetailsWithGlobalDgeFlow: Flow<AllDayDetailsWithGlobalDge>) {
-            overallNutrientCompliance = calculateNutritionQualityUseCase.calculateOverallNutrientCompliance(
-                allDayDetailsWithGlobalDgeFlow.map { it.dayDetails }
-            )
-    }
-
     private fun loadDayDetails() {
         viewModelScope.launch {
             _isLoading.value = true
@@ -65,9 +59,8 @@ class NutritionViewModel @Inject constructor(
                 allDayDetailsWithGlobalDgeFlow = getDayDetailsUseCase()
                 dgeRecommendationData = nutritionUseCases.getDgeRecommendationDataUseCase()
 
-                calculateNutritionQuality(allDayDetailsWithGlobalDgeFlow)
+                calculatePlantMetric()
                 calculateCaloriesAvg(allDayDetailsWithGlobalDgeFlow)
-                calculateOverallNutrientCompliance(allDayDetailsWithGlobalDgeFlow)
                 calculateCaloriesPerDay(allDayDetailsWithGlobalDgeFlow)
 
                 allDayDetailsWithGlobalDgeFlow.collect {

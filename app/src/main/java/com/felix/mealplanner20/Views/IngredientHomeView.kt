@@ -166,7 +166,7 @@ fun IngredientItem(ingredient:Ingredient, onClick: ()->Unit){
                         .align(Alignment.CenterVertically),
                     text = if (isGerman) ingredient.germanName else ingredient.englishName?: ingredient.germanName,
                     style = MaterialTheme.typography.bodyMedium)
-                IconButton(onClick = {}) {
+                IconButton(onClick = onClick) {
                     Icon(painter = painterResource(R.drawable.add_icon), tint = Lime600, contentDescription = "add Icon")
                 }
             }

@@ -26,6 +26,7 @@ import com.felix.mealplanner20.R
 import com.felix.mealplanner20.Views.Recipes.PublishRequirement
 import com.felix.mealplanner20.apiService.WizardIngredient
 import com.felix.mealplanner20.apiService.WizardIngredientList
+import com.felix.mealplanner20.apiService.WizardRepository
 import com.felix.mealplanner20.apiService.WizardResultHolder
 import com.felix.mealplanner20.use_cases.RecipeUseCases
 import com.felix.mealplanner20.use_cases.UpdateRecipeUseCase
@@ -55,6 +56,7 @@ class AddEditRecipeViewModel @Inject constructor(
     private val publishRecipeUseCase: UploadRecipeUseCase,
     private val updateRecipeUseCase: UpdateRecipeUseCase,
     private val wizardResultHolder: WizardResultHolder,
+    private val wizardRepository: WizardRepository,
     private val authRepository: AuthRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -133,6 +135,24 @@ class AddEditRecipeViewModel @Inject constructor(
 
     private val _wizardStepsAppliedCount = MutableStateFlow(0)
     val wizardStepsAppliedCount: StateFlow<Int> = _wizardStepsAppliedCount.asStateFlow()
+
+    // Rohe letzte Server-Antwort; wird beim Verfeinern unverändert als `previous` geschickt.
+    private val _lastWizardResult = MutableStateFlow<WizardIngredientList?>(null)
+    val lastWizardResult: StateFlow<WizardIngredientList?> = _lastWizardResult.asStateFlow()
+
+    private val _wizardToast = MutableStateFlow<String?>(null)
+    val wizardToast: StateFlow<String?> = _wizardToast.asStateFlow()
+
+    val wizardRefinePrompt = WizardPromptController(
+        wizardRepository = wizardRepository,
+        scope = viewModelScope,
+        previous = { _lastWizardResult.value },
+        onToast = { _wizardToast.value = it },
+        onSuccess = { result ->
+            _lastWizardResult.value = result
+            replaceWizardResult(result)
+        }
+    )
 
 
     private val recipeNameFlow: Flow<String> = snapshotFlow { _recipeName.value }
@@ -297,6 +317,7 @@ class AddEditRecipeViewModel @Inject constructor(
             }else{
                 _isLoading.value = false
                 wizardResultHolder.consume()?.let { pending ->
+                    _lastWizardResult.value = pending
                     viewModelScope.launch { applyWizardResult(pending) }
                 }
             }
@@ -339,7 +360,7 @@ class AddEditRecipeViewModel @Inject constructor(
                     uomEnum?.let { it to au.gramsPerUnit }
                 }
                 _allowedUnitsForIngredients.value =
-                    _allowedUnitsForIngredients.value + (matchedId to mappedUnits)
+                    _allowedUnitsForIngredients.value + (matchedId to withGramGuaranteed(mappedUnits))
 
                 val parsedUnit = parseWizardUnit(item.unit)
                 val finalUnit = when {
@@ -375,6 +396,18 @@ class AddEditRecipeViewModel @Inject constructor(
         } finally {
             _isApplyingWizard.value = false
         }
+    }
+
+    /** Verfeinern: Titel, Zutaten und Schritte komplett durch die neue Antwort ersetzen. */
+    private suspend fun replaceWizardResult(result: WizardIngredientList) {
+        _recipeName.value = EMPTY_STRING
+        recipeIngredients = emptyList()
+        _recipeDescriptionSteps.value = null
+        applyWizardResult(result)
+    }
+
+    fun consumeWizardToast() {
+        _wizardToast.value = null
     }
 
     private fun applyWizardSteps(steps: List<com.felix.mealplanner20.apiService.WizardStep>): Int {
@@ -563,13 +596,21 @@ class AddEditRecipeViewModel @Inject constructor(
                 }
 
                 // Map updaten
-                _allowedUnitsForIngredients.value = _allowedUnitsForIngredients.value + (ingredientId to mappedUnits)
+                _allowedUnitsForIngredients.value = _allowedUnitsForIngredients.value + (ingredientId to withGramGuaranteed(mappedUnits))
             } catch (e: Exception) {
                 Log.e("AddEditRecipeVM", "Fehler beim Laden der AllowedUnits für Ingredient $ingredientId", e)
             }
         }
     }
 
+    // GRAM is the unit everything is internally normalized to (ingredientQuantity is always
+    // stored in grams), so it must always be selectable in the unit dropdown even if an
+    // ingredient's admin-curated allowed-units list doesn't explicitly list it - otherwise a
+    // user who switches away from GRAM (e.g. to PIECE) has no way back.
+    private fun withGramGuaranteed(units: List<Pair<UnitOfMeasure, Float>>): List<Pair<UnitOfMeasure, Float>> {
+        return if (units.any { it.first == UnitOfMeasure.GRAM }) units
+        else listOf(UnitOfMeasure.GRAM to 1f) + units
+    }
 
     private fun updateDescriptionStep(step: RecipeDescription) {
         _recipeDescriptionSteps.value = _recipeDescriptionSteps.value?.map {
@@ -676,9 +717,9 @@ class AddEditRecipeViewModel @Inject constructor(
         val newRecipeDescriptionStep = RecipeDescription(
             recipeId = recipeId.toInt(),
             stepNr = getNextDescriptionStepNumber(),
-            text = "Beschreibung...",
-            englishText = "Description...",
-            germanText = "Beschreibung...",
+            text = "",
+            englishText = "",
+            germanText = "",
             imgUri = null
         )
 
@@ -697,9 +738,9 @@ class AddEditRecipeViewModel @Inject constructor(
         val newRecipeDescriptionStep = RecipeDescription(
             recipeId = tempRecipe.id.toInt(),
             stepNr = getNextDescriptionStepNumber(),
-            text = "Beschreibung...",
-            englishText = "Description...",
-            germanText = "Beschreibung...",
+            text = "",
+            englishText = "",
+            germanText = "",
             imgUri = null
         )
         if(_recipeDescriptionSteps.value != null) {

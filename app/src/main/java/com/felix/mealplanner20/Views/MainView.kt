@@ -242,6 +242,8 @@ fun MainView (){
                 )
                 Screen.BottomScreen.Profile(context).route ->{}
 
+                Screen.BottomScreen.MealPlanScreen(context).route ->{}
+
                 Screen.AddMealPlanRecipeScreen(context).route ->BackArrowTopAppBar(
                     title =  mainViewModel.currentTopAppBarTitle.value,
                     onBackArrowClick = {
@@ -256,6 +258,12 @@ fun MainView (){
                 )
 
                 Screen.DiscoverRecipesSingleViewScreen(context).route ->BackArrowTopAppBar(
+                    title =  mainViewModel.currentTopAppBarTitle.value,
+                    onBackArrowClick = {
+                        navController.navigateUp()
+                    }
+                )
+                Screen.PublicProfileScreen(context).route ->BackArrowTopAppBar(
                     title =  mainViewModel.currentTopAppBarTitle.value,
                     onBackArrowClick = {
                         navController.navigateUp()

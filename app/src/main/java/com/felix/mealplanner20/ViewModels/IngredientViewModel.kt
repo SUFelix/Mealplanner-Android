@@ -48,6 +48,7 @@ class IngredientViewModel @Inject constructor (
     var ingredientAlcoholState by mutableStateOf(EMPTY_STRING)
     var ingredientDgeTypeState by mutableStateOf(dgeGroup.MILK)
     var unitOfMeasureState by mutableStateOf(UnitOfMeasure.GRAM)
+    var ingredientPlantGroupKeyState by mutableStateOf(EMPTY_STRING)
 
     private val _searchQuery = MutableStateFlow(EMPTY_STRING)
     val searchQuery: StateFlow<String> = _searchQuery
@@ -168,6 +169,9 @@ class IngredientViewModel @Inject constructor (
     fun onUnitOfMeasureChange(unitOfMeasureName: String){
         getUnitOfMeasureFromString(unitOfMeasureName)?.let{unitOfMeasureState = it}
     }
+    fun onIngredientPlantGroupKeyChange(newValue: String){
+        ingredientPlantGroupKeyState = newValue
+    }
     fun getIngredientById(id:Long):Flow<Ingredient>{
         return ingredientRepository.getIngredientById(id)
     }
@@ -220,6 +224,9 @@ class IngredientViewModel @Inject constructor (
         isRefreshing.update { true }
         viewModelScope.launch(Dispatchers.IO) {
             uploadUpdateIngredientUseCase.execute(ingredient)
+            // Persist to Room directly so the edit (including plantGroupKey) is reflected
+            // immediately rather than waiting for the next sync round-trip.
+            ingredientRepository.updateIngredient(ingredient)
             ingredientRepository.getAllIngredients()
             isRefreshing.update { false }
         }

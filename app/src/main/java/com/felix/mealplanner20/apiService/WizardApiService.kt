@@ -2,6 +2,7 @@ package com.felix.mealplanner20.apiService
 
 import okhttp3.MultipartBody
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.HeaderMap
 import retrofit2.http.Multipart
 import retrofit2.http.POST
@@ -17,7 +18,19 @@ interface WizardApiService {
         @Part image: MultipartBody.Part,
         @HeaderMap headers: Map<String, String>
     ): Response<WizardIngredientList>
+
+    @POST("wizard/generate")
+    suspend fun generateRecipe(
+        @Body request: WizardGenerateRequest,
+        @HeaderMap headers: Map<String, String>
+    ): Response<WizardIngredientList>
 }
+
+@Serializable
+data class WizardGenerateRequest(
+    val prompt: String,
+    val previous: WizardIngredientList? = null
+)
 
 
 @Serializable

@@ -35,7 +35,9 @@ data class Ingredient(
     @ColumnInfo(name = "isFavorit")
     val isFavorit: Boolean = false,
     @ColumnInfo(name = "ingredient_unitOfMeasure")
-    val unitOfMeasure: UnitOfMeasure = UnitOfMeasure.GRAM
+    val unitOfMeasure: UnitOfMeasure = UnitOfMeasure.GRAM,
+    @ColumnInfo(name = "plantGroupKey")
+    val plantGroupKey: String? = null
     ){
 
    fun isVegan():Boolean{
@@ -55,6 +57,20 @@ data class Ingredient(
             dgeGroup.MEAT -> false
             dgeGroup.OTHER -> false
             else -> true
+        }
+    }
+
+    fun isPlant():Boolean{
+        return when(dgeType){
+            dgeGroup.OIL -> true
+            dgeGroup.WHOLEGRAIN -> true
+            dgeGroup.POTATO -> true
+            dgeGroup.FRUIT -> true
+            dgeGroup.VEGETABLE -> true
+            dgeGroup.LEGUME -> true
+            dgeGroup.NUTSANDSEEDS -> true
+            dgeGroup.SPICE -> true
+            else -> false
         }
     }
 }
