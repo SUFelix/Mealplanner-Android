@@ -71,6 +71,17 @@ class MyOwnRecipesViewModel @Inject constructor (
         combine(_isLoggedIn, _isPremium) { loggedIn, premium -> loggedIn && premium }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    val wizardPrompt = WizardPromptController(
+        wizardRepository = wizardRepository,
+        scope = viewModelScope,
+        previous = { null },
+        onToast = { _wizardError.value = it },
+        onSuccess = { result ->
+            wizardResultHolder.set(result)
+            _navigateToWizardRecipe.value = true
+        }
+    )
+
     init {
         loadData()
         refreshUserStatus()

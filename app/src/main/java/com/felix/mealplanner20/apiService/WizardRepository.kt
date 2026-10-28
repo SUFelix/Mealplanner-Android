@@ -63,6 +63,10 @@ class WizardRepository @Inject constructor(
         wizardApiService.analyzeRecipeImage(body, headers)
     }
 
+    suspend fun generate(prompt: String, previous: WizardIngredientList?): WizardResponse = call { headers ->
+        wizardApiService.generateRecipe(WizardGenerateRequest(prompt.trim(), previous), headers)
+    }
+
     private suspend fun call(
         request: suspend (headers: Map<String, String>) -> Response<WizardIngredientList>
     ): WizardResponse {
