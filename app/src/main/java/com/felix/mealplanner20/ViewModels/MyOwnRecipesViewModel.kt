@@ -12,9 +12,11 @@ import com.felix.mealplanner20.Meals.Data.RecipeRepository
 import com.felix.mealplanner20.Meals.Data.SettingsRepository
 import com.felix.mealplanner20.Meals.Data.helpers.UserRoles
 import com.felix.mealplanner20.Meals.Data.helpers.uriToScaledJpegBytes
-import com.felix.mealplanner20.apiService.WizardApiService
 import com.felix.mealplanner20.apiService.WizardIngredientList
+import com.felix.mealplanner20.apiService.WizardRepository
+import com.felix.mealplanner20.apiService.WizardResponse
 import com.felix.mealplanner20.apiService.WizardResultHolder
+import com.felix.mealplanner20.apiService.errorText
 import com.felix.mealplanner20.use_cases.NutritionBasicUseCases
 import com.mealplanner20.jwtauthktorandroid.auth.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,9 +28,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 
 @HiltViewModel
@@ -36,7 +35,7 @@ class MyOwnRecipesViewModel @Inject constructor (
     private val recipeRepository: RecipeRepository,
     private val nutritionUseCases: NutritionBasicUseCases,
     private val settingsRepository: SettingsRepository,
-    private val wizardApiService: WizardApiService,
+    private val wizardRepository: WizardRepository,
     private val authRepository: AuthRepository,
     private val wizardResultHolder: WizardResultHolder,
     private val prefs: SharedPreferences
@@ -107,8 +106,7 @@ class MyOwnRecipesViewModel @Inject constructor (
             _wizardError.value = null
             _wizardResult.value = null
             try {
-                val token = authRepository.getToken()
-                if (token == null) {
+                if (authRepository.getToken() == null) {
                     _wizardError.value = "Not logged in"
                     return@launch
                 }
@@ -117,21 +115,22 @@ class MyOwnRecipesViewModel @Inject constructor (
                     _wizardError.value = "Could not read image"
                     return@launch
                 }
-                val requestFile = bytes.toRequestBody("image/jpeg".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("image", "wizard.jpg", requestFile)
-                val headers = mapOf("Authorization" to "Bearer $token")
-
-                val response = wizardApiService.analyzeRecipeImage(body, headers)
-                if (response.isSuccessful) {
-                    val result = response.body()
-                    _wizardResult.value = result
-                    if (result != null) {
-                        wizardResultHolder.set(result)
+                when (val response = wizardRepository.analyzeImage(bytes)) {
+                    is WizardResponse.Success -> {
+                        _wizardResult.value = response.result
+                        wizardResultHolder.set(response.result)
                         _navigateToWizardRecipe.value = true
                     }
-                } else {
-                    _wizardError.value = "Wizard failed: ${response.code()} ${response.message()}"
-                    Log.e("Wizard", "API error ${response.code()} - ${response.message()}")
+                    WizardResponse.EmptyBody -> Unit
+                    is WizardResponse.HttpFailure -> {
+                        _wizardError.value = response.errorText()
+                        Log.e("Wizard", "API error ${response.code} - ${response.httpMessage}")
+                    }
+                    is WizardResponse.Failure -> {
+                        _wizardError.value = response.errorText()
+                        Log.e("Wizard", "Exception while analyzing image", response.cause)
+                    }
+                    WizardResponse.NotLoggedIn -> _wizardError.value = response.errorText()
                 }
             } catch (e: Exception) {
                 _wizardError.value = e.message ?: "Unknown error"
