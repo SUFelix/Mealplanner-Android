@@ -102,6 +102,7 @@ import javax.inject.Singleton
 
 const val BASE_URL = "https://www.mealplannerpro.net/"
 
+
 @Module
 @InstallIn(SingletonComponent::class)
 object NavGraph {

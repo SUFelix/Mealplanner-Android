@@ -115,7 +115,7 @@ class ProfileViewModel @Inject constructor(
             if (prefs.getString("username", null) != user) {
                 prefs.edit().putString("username", user).apply()
             }
-            _username.postValue(user)
+            _username.postValue(user!!)
         }
         return user
     }
